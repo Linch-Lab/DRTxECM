@@ -13,9 +13,7 @@ DRTxECM extends [pyDRTtools](https://github.com/ciuccislab/pyDRTtools) with a co
 ```bash
 git clone https://github.com/Linch-Lab/DRTxECM.git
 cd DRTxECM
-conda create --name DRT python=3.10 pip pandas matplotlib scikit-learn -y
-conda activate DRT
-pip install cvxopt PyQt5
+pip install numpy scipy pandas matplotlib scikit-learn cvxopt PyQt5
 python launch.py
 ```
 
