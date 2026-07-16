@@ -627,16 +627,16 @@ class Stage3Window(QtWidgets.QDialog):
         for col, h in enumerate(headers):
             self.grid.addWidget(QtWidgets.QLabel(f"<b>{h}</b>"), 0, col)
             
-        self.add_param_row("R_ohm", r_val, 1, is_fixed=True)
-        self.add_param_row("L_ind", l_val, 2, is_fixed=True)
+        self.add_param_row("R_ohm", r_val, 1, param_type='R', default_mode='Fixed')
+        self.add_param_row("L_ind", l_val, 2, param_type='L', default_mode='Fixed')
         
         row_idx = 3
         for i, p in enumerate(self.peaks):
             self.grid.addWidget(QtWidgets.QLabel(f"<b>-- Peak Branch {i+1} --</b>"), row_idx, 0, 1, 5)
             row_idx += 1
-            self.add_param_row(f"R_{i+1}", p['R'], row_idx)
-            self.add_param_row(f"Q_{i+1}", p['Q'], row_idx+1)
-            self.add_param_row(f"n_{i+1}", p['alpha'], row_idx+2, is_fixed=True)
+            self.add_param_row(f"R_{i+1}", p['R'], row_idx, param_type='R', default_mode='Fixed')
+            self.add_param_row(f"Q_{i+1}", p['Q'], row_idx+1, param_type='Q', default_mode='Fixed')
+            self.add_param_row(f"n_{i+1}", p['alpha'], row_idx+2, param_type='n', default_mode='<= 1')
             row_idx += 3
             
         self.lbl_rmse = QtWidgets.QLabel("Complex Impedance RMSE: --")
@@ -672,15 +672,27 @@ class Stage3Window(QtWidgets.QDialog):
         plot_lay.addWidget(self.canvas)
         layout.addLayout(plot_lay, stretch=6)
 
-    def add_param_row(self, name, val, row, is_fixed=False):
+    def add_param_row(self, name, val, row, param_type='R', default_mode='Fixed'):
         self.grid.addWidget(QtWidgets.QLabel(name), row, 0)
         combo = QtWidgets.QComboBox()
-        combo.addItems(["Free", "Fixed"])
-
-        if is_fixed:
-            combo.setCurrentIndex(1)
+        
+        if param_type == 'n':
+            combo.addItems(["Free", "<= 1", "Fixed"])
+        elif param_type in ('R', 'Q'):
+            combo.addItems(["Free", "Free +-5%", "Free +-10%", "Fixed"])
         else:
-            combo.setCurrentIndex(0)
+            combo.addItems(["Free", "Fixed"])
+        
+        # Set default mode
+        mode_map = {"Free": 0, "<= 1": 1, "Free +-5%": 1, "Free +-10%": 2, "Fixed": 3}
+        if param_type == 'n':
+            mode_map = {"Free": 0, "<= 1": 1, "Fixed": 2}
+            if default_mode != "Fixed":
+                mode_map["Fixed"] = 2
+        if default_mode in mode_map:
+            combo.setCurrentIndex(mode_map[default_mode])
+        else:
+            combo.setCurrentIndex(combo.count() - 1)  # last = Fixed
         
         # Disable auto-recalculate on change
         #combo.currentIndexChanged.connect(self.run_simulation)
@@ -790,12 +802,28 @@ class Stage3Window(QtWidgets.QDialog):
         
         active_keys, x0, bounds = [], [], []
         for k, w in self.param_widgets.items():
-            if w['mode'].currentText() == "Free":
-                active_keys.append(k)
-                x0.append(float(w['val'].text()))
-                if 'n_' in k: bounds.append((0.2, 1.05))
-                elif 'L_' in k: bounds.append((-np.inf, np.inf))
-                else: bounds.append((0.0, np.inf))
+            mode = w['mode'].currentText()
+            if mode == "Fixed":
+                continue
+            active_keys.append(k)
+            val0 = float(w['val'].text())
+            x0.append(val0)
+            
+            if 'n_' in k:
+                if mode == "<= 1":
+                    bounds.append((0.2, 1.0))
+                else:
+                    bounds.append((0.2, 1.05))
+            elif 'L_' in k:
+                bounds.append((-np.inf, np.inf))
+            else:
+                # R or Q
+                if mode == "Free +-5%":
+                    bounds.append((val0 * 0.95, val0 * 1.05))
+                elif mode == "Free +-10%":
+                    bounds.append((val0 * 0.90, val0 * 1.10))
+                else:
+                    bounds.append((0.0, np.inf))
                 
         if not x0:
             QtWidgets.QMessageBox.information(self, "Info", "All parameters are locked in Fixed state!")
