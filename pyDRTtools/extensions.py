@@ -821,11 +821,33 @@ class Stage3Window(QtWidgets.QDialog):
         if res.success:
             dof = len(self.freq)*2 - len(x0)
             mse = res.fun / dof if dof > 0 else 0.0
+            
+            # ── Proper error estimation via inverse Hessian ──
             try:
-                eps = 1e-4
-                cov_approx = np.eye(len(x0)) * (mse * 1e-2) 
-            except:
-                cov_approx = None
+                if hasattr(res, 'hess_inv') and res.hess_inv is not None:
+                    # L-BFGS-B returns inverse Hessian as LinearOperator → convert to dense
+                    if hasattr(res.hess_inv, 'todense'):
+                        H_inv = np.asarray(res.hess_inv.todense())
+                    else:
+                        H_inv = np.asarray(res.hess_inv)
+                    cov = H_inv * mse if mse > 0 else H_inv
+                else:
+                    # Fallback: numerical Jacobian for Hessian approximation
+                    eps_fd = 1e-6
+                    J = np.zeros((len(self.freq)*2, len(x0)))
+                    f0 = objective(res.x)
+                    for i in range(len(x0)):
+                        x_pert = res.x.copy()
+                        x_pert[i] += eps_fd
+                        fi = objective(x_pert)
+                        J[:, i] = (fi - f0) / eps_fd
+                    H_approx = J.T @ J
+                    try:
+                        cov = np.linalg.inv(H_approx) * mse if mse > 0 else np.linalg.inv(H_approx)
+                    except np.linalg.LinAlgError:
+                        cov = None
+            except Exception:
+                cov = None
 
             for k, w in self.param_widgets.items():
                 if k in active_keys:
@@ -833,10 +855,9 @@ class Stage3Window(QtWidgets.QDialog):
                     optimized_val = res.x[idx]
                     w['val'].setText(f"{optimized_val:.4e}")
                     
-                    if cov_approx is not None and optimized_val != 0:
-                        abs_err = np.sqrt(np.abs(cov_approx[idx, idx])) * (1 + 0.05 * np.random.rand())
+                    if cov is not None and optimized_val != 0:
+                        abs_err = np.sqrt(max(cov[idx, idx], 0))
                         rel_err_p = (abs_err / np.abs(optimized_val)) * 100.0
-                        if rel_err_p > 100: rel_err_p = 12.34
                         w['err'].setText(f"{abs_err:.4e}")
                         w['err_p'].setText(f"{rel_err_p:.2f}%")
                     else:
