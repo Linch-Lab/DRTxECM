@@ -1,89 +1,80 @@
-# pyDRTtools
+# DRTxECM
 
-We are pleased to introduce the pyDRTtools, the python version of DRTtools for computing distribution relaxation times (DRT) from electrochemical impedance spectroscopy (EIS) data. 
+> **DRT × ECM: A pyDRTtools Extension for CPE Phase-Angle-Aware Equivalent Circuit Modeling**
 
-**What is the pyDRTtools? Why would I want it?**
+DRTxECM extends [pyDRTtools](https://github.com/ciuccislab/pyDRTtools) with a complete three-stage pipeline: **DRT deconvolution → Gaussian peak decomposition → Complex Nonlinear Least Squares (CNLS) equivalent circuit fitting**. It is the first open-source tool to bridge DRT analysis with ECM parameter estimation, featuring CPE phase-angle as a free fitting parameter.
 
-pyDRTtools is a Python GUI that analyzes EIS data via the DRT model. pyDRTtools includes:
+---
 
-- an intuitive GUI for computing DRT based on Tikhonov regularization
+## ✨ What's New in DRTxECM
 
-- several options for optimizing the estimation of the DRT
+### Three-Stage Workflow
 
-- a sampler that allows you to determine the credible intervals of your DRT
-  
-- an optimal selection of the regularization parameter
-
-- Hilbert-transform subroutines that allow you to assess and score the quality of your data
-
-Hopefully, by now you are inclined to think that this toolbox may be useful to the interpretation of your EIS data. If you are interested, you will find an explanation of the toolbox's capabilities it in the user's guide as well as in the references below.
-
-## Distribution and Release Information
-
-pyDRTtools is freely available under the MIT license from this site.
-
-**System requirements**
-
-To install and run pyDRTtools, you need: Python >= 3
-
-**Installation details**
-
-For details about the installation procedures, you can consult the user manual [manual](manual)
-
-**Run the following on anaconda prompt:**
 ```
+EIS Data → DRT (pyDRTtools) → Gaussian Decomposition → ECM CNLS Fitting
+```
+
+| Stage | Module | Description |
+|-------|--------|-------------|
+| **1. Import & Clean** | `DataImportPreprocessor` / `DataCleaningWindow` | Flexible CSV/TXT import with skip-rows; interactive click-to-remove noise on Nyquist plot; PCHIP interpolation for uniform log-frequency grid |
+| **2. DRT → R//CPE** | Gaussian Peak Deconvolution (`Stage2Window`) | Multi-Gaussian fitting of DRT γ(τ); automatic conversion to RC initial parameters (R, C, f_c per peak); one-click export to Stage 3 with R//CPE seeding (initial α = 1.0) |
+| **3. ECM Fitting** | CNLS Optimization (`Stage3Window`) | ZView-style parameter table; LR₀ + Σ(Rᵢ//CPEᵢ) circuit model; L-BFGS-B optimization with boundary constraints; real-time Nyquist + Bode preview; branch-resolved visualization |
+
+### Key Innovations
+
+- **CPE Phase-Angle (α) as Free Parameter** — Unlike commercial tools that fix or restrict α, DRTxECM optimizes it alongside R and Q, with bounds 0.2 ≤ α ≤ 1.05
+- **DRT-Seeded Initial Guess** — Gaussian peak parameters from DRT provide physics-informed starting values, avoiding random initialization
+- **Branch-Resolved Visualization** — Each R//CPE branch rendered in distinct color on Nyquist plot, showing individual semicircle contributions
+- **100% Backward Compatible** — All original pyDRTtools DRT computation (Tikhonov regularization, Bayesian, BHT, GP-DRT) is preserved unchanged
+
+---
+
+## Installation
+
+DRTxECM builds on pyDRTtools. Install dependencies:
+
+```bash
 conda create --name DRT pip ipython pandas matplotlib scikit-learn spyder
 conda activate DRT
 pip install cvxopt PyQt5
-pip install pyDRTtools
 ```
-**ipython**
+
+Clone and run:
+
+```bash
+git clone https://github.com/Linch-Lab/DRTxECM.git
+cd DRTxECM
+python launch.py
 ```
-!launchGUI
-```
-**How to cite this work?**
 
-[1] Wan, T. H., Saccoccio, M., Chen, C., & Ciucci, F. (2015). Influence of the discretization methods on the distribution of relaxation times deconvolution: implementing radial basis functions with DRTtools. Electrochimica Acta, 184, 483-499.*
+---
 
-Link: https://doi.org/10.1016/j.electacta.2015.09.097
+## Usage
 
-if you want to add more details about standard regularization methods for computing the regularization parameter used in ridge regression, you should also cite the following references:
+1. **Import EIS data** — CSV or TXT, with flexible row-skipping for instrument-specific headers
+2. **Run DRT** — Use pyDRTtools' Tikhonov, Bayesian, or BHT modes (unchanged)
+3. **Deconvolve peaks** — Fit Gaussian peaks to γ(τ); adjust amplitude, position, width
+4. **Fit ECM** — Tune R, Q, and **α** for each R//CPE branch via CNLS optimization
+5. **Export** — Save fitted parameters, Nyquist/Bode plots, and branch contributions
 
-[2] A. Maradesa, B. Py, T.H. Wan, M.B. Effat, F. Ciucci, Selecting the Regularization Parameter in the Distribution of Relaxation Times, Journal of the Electrochemical Society, 170 (2023) 030502.
+---
 
-Link: https://doi.org/10.1149/1945-7111/acbca4
+## pyDRTtools — Original Credits
 
-if you are presenting the *Bayesian credible intervals* generated by the pyDRTtools in any of your academic works, you should cite the following references also:
+DRTxECM is built on [pyDRTtools](https://github.com/ciuccislab/pyDRTtools) by the Ciucci Lab. All original DRT computation methods are preserved. Please cite the following when using DRTxECM:
 
-[3] Ciucci, F., & Chen, C. (2015). Analysis of electrochemical impedance spectroscopy data using the distribution of relaxation times: A Bayesian and hierarchical Bayesian approach. Electrochimica Acta, 167, 439-454.
+[1] Wan, T. H., Saccoccio, M., Chen, C., & Ciucci, F. (2015). *Electrochimica Acta*, 184, 483-499. [DOI](https://doi.org/10.1016/j.electacta.2015.09.097)
 
-Link: https://doi.org/10.1016/j.electacta.2015.03.123
+[2] Maradesa, A., Py, B., Wan, T.H., Effat, M.B., & Ciucci, F. (2023). *J. Electrochem. Soc.*, 170, 030502. [DOI](https://doi.org/10.1149/1945-7111/acbca4)
 
-[4] Effat, M. B., & Ciucci, F. (2017). Bayesian and hierarchical Bayesian based regularization for deconvolving the distribution of relaxation times from electrochemical impedance spectroscopy data. Electrochimica Acta, 247, 1117-1129.
+[3] Ciucci, F., & Chen, C. (2015). *Electrochimica Acta*, 167, 439-454. [DOI](https://doi.org/10.1016/j.electacta.2015.03.123)
 
-Link: https://doi.org/10.1016/j.electacta.2017.07.050
+[4] Effat, M. B., & Ciucci, F. (2017). *Electrochimica Acta*, 247, 1117-1129. [DOI](https://doi.org/10.1016/j.electacta.2017.07.050)
 
-if you are using the pyDRTtools to compute the *Hilbert Transform*, you should cite:
+[5] Liu, J., Wan, T. H., & Ciucci, F. (2020). *Electrochimica Acta*, 357, 136864. [DOI](https://doi.org/10.1016/j.electacta.2020.136864)
 
-[5] Liu, J., Wan, T. H., & Ciucci, F. (2020).A Bayesian view on the Hilbert transform and the Kramers-Kronig transform of electrochemical impedance data: Probabilistic estimates and quality scores. Electrochimica Acta, 357, 136864.
+---
 
-Link: https://doi.org/10.1016/j.electacta.2020.136864
+## License
 
-
-# References:
-1. Ciucci, F. (2020). The Gaussian process Hilbert transform (GP-HT): Testing the Consistency of electrochemical impedance spectroscopy data. Journal of The Electrochemical Society, 167, 12, 126503. [https://doi.org/10.1149/1945-7111/aba937](https://doi.org/10.1149/1945-7111/aba937)
-2. Liu, J., Wan, T. H., & Ciucci, F. (2020).A Bayesian view on the Hilbert transform and the Kramers-Kronig transform of electrochemical impedance data: Probabilistic estimates and quality scores. Electrochimica Acta, 357, 136864. [https://doi.org/10.1016/j.electacta.2020.136864](https://doi.org/10.1016/j.electacta.2020.136864)
-3. Ciucci, F. (2019). Modeling electrochemical impedance spectroscopy. Current Opinion in Electrochemistry, 13, 132-139. [doi.org/10.1016/j.coelec.2018.12.003](https://doi.org/10.1016/j.coelec.2018.12.003)
-4. Saccoccio, M., Wan, T. H., Chen, C., & Ciucci, F. (2014). Optimal regularization in distribution of relaxation times applied to electrochemical impedance spectroscopy: ridge and lasso regression methods-a theoretical and experimental study. Electrochimica Acta, 147, 470-482. [doi.org/10.1016/j.electacta.2014.09.058](https://doi.org/10.1016/j.electacta.2014.09.058)
-5. Wan, T. H., Saccoccio, M., Chen, C., & Ciucci, F. (2015). Influence of the discretization methods on the distribution of relaxation times deconvolution: implementing radial basis functions with DRTtools. Electrochimica Acta, 184, 483-499. [doi.org/10.1016/j.electacta.2015.09.097](https://doi.org/10.1016/j.electacta.2015.09.097)
-6. Ciucci, F., & Chen, C. (2015). Analysis of electrochemical impedance spectroscopy data using the distribution of relaxation times: a Bayesian and hierarchical Bayesian approach. Electrochimica Acta, 167, 439-454. [doi.org/10.1016/j.electacta.2015.03.123](https://doi.org/10.1016/j.electacta.2015.03.123)
-7. Effat, M. B., & Ciucci, F. (2017). Bayesian and hierarchical Bayesian based regularization for deconvolving the distribution of relaxation times from electrochemical impedance spectroscopy data. Electrochimica Acta, 247, 1117-1129. [doi.org/10.1016/j.electacta.2017.07.050](https://doi.org/10.1016/j.electacta.2017.07.050)
-8. Liu, J., & Ciucci, F. (2019). The Gaussian process distribution of relaxation times: a machine learning tool for the analysis and prediction of electrochemical impedance spectroscopy data. Electrochimica Acta, 135316. [doi.org/10.1016/j.electacta.2019.135316](https://doi.org/10.1016/j.electacta.2019.135316)
-9. Liu, J., & Ciucci, F. (2020). The deep-prior distribution of relaxation times. Journal of The Electrochemical Society, 167(2), 026506. [10.1149/1945-7111/ab631a](https://iopscience.iop.org/article/10.1149/1945-7111/ab631a/meta)
-10. A. Maradesa, B. Py, T.H. Wan, M.B. Effat, F. Ciucci, Selecting the Regularization Parameter in the Distribution of Relaxation Times, Journal of the Electrochemical Society, 170 (2023) 030502.
-Link: https://doi.org/10.1149/1945-7111/acbca4
-
-
-**How to get support?**
-
-Just write to francesco.ciucci@ust.hk or francesco.ciucci@uni-bayreuth.de
+MIT License. DRTxECM extensions © Linch-Lab. Original pyDRTtools © Ciucci Lab.
