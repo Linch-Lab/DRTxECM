@@ -4,6 +4,23 @@
 
 DRTxECM extends [pyDRTtools](https://github.com/ciuccislab/pyDRTtools) with a complete three-stage pipeline: **DRT deconvolution → Gaussian peak decomposition → Complex Nonlinear Least Squares (CNLS) equivalent circuit fitting**. It is the first open-source tool to bridge DRT analysis with ECM parameter estimation, featuring CPE phase-angle as a free fitting parameter.
 
+[![Installation](https://img.shields.io/badge/Install-Windows%20|%20macOS%20|%20Linux-blue)](INSTALL.md)
+
+---
+
+## 🚀 Quick Install (Windows)
+
+```bash
+git clone https://github.com/Linch-Lab/DRTxECM.git
+cd DRTxECM
+conda create --name DRT python=3.10 pip pandas matplotlib scikit-learn -y
+conda activate DRT
+pip install cvxopt PyQt5
+python launch.py
+```
+
+> Full instructions (macOS, Linux, ZIP download): [INSTALL.md](INSTALL.md)
+
 ---
 
 ## ✨ What's New in DRTxECM
