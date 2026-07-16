@@ -2,14 +2,14 @@
 import numpy as np
 import pandas as pd
 from PyQt5 import QtWidgets, QtCore, QtGui
-# 🚀 徹底移除 pyplot，改用純物件導向的 Figure 確保零記憶體洩漏
+# Eliminate pyplot entirely; use pure OOP Figure to ensure zero memory leaks
 from matplotlib.figure import Figure 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from scipy.optimize import curve_fit, minimize
 
 # ==========================================
-# 核心數學與電路邏輯
+# Core Mathematics and Circuit Logic
 # ==========================================
 def gaussian(x, amp, cen, wid):
     return amp * np.exp(-(x - cen)**2 / (2 * wid**2))
@@ -33,14 +33,14 @@ def ecm_circuit_solver(freq, R_ohm, L, peak_params):
 
 
 # ==========================================
-# 模組 1: 數據匯入前處理 (DataImportPreprocessor)
+# Module 1: Data Import Preprocessing (DataImportPreprocessor)
 # ==========================================
 class DataImportPreprocessor(QtWidgets.QDialog):
     def __init__(self, parent_gui, file_path):
         super().__init__(parent_gui)
         self.parent_gui = parent_gui
         self.file_path = file_path
-        self.setWindowTitle("EIS 數據導入前處理面板 (OpenEIS)")
+        self.setWindowTitle("EIS Data Import Preprocessing Panel (DRTxECM)")
         self.resize(850, 600)
         
         self.skip_rows = 0
@@ -58,7 +58,7 @@ class DataImportPreprocessor(QtWidgets.QDialog):
         main_layout = QtWidgets.QVBoxLayout(self)
         ctrl_layout = QtWidgets.QHBoxLayout()
         
-        ctrl_layout.addWidget(QtWidgets.QLabel("跳過前排行數 (Skip Rows):"))
+        ctrl_layout.addWidget(QtWidgets.QLabel("Skip Leading Rows:"))
         self.spin_skip = QtWidgets.QSpinBox()
         self.spin_skip.setRange(0, max(0, len(self.raw_lines) - 5))
         self.spin_skip.setValue(0)
@@ -67,7 +67,7 @@ class DataImportPreprocessor(QtWidgets.QDialog):
         
         ctrl_layout.addSpacing(20)
         
-        self.btn_toggle_imag = QtWidgets.QPushButton("🔄 一鍵切換第3欄 (Z'') 正負號 (* -1)")
+        self.btn_toggle_imag = QtWidgets.QPushButton("Toggle Column 3 (Z'') Sign (* -1)")
         self.btn_toggle_imag.setCheckable(True)
         self.btn_toggle_imag.setStyleSheet("background-color: #E0E0E0; font-weight: bold;")
         self.btn_toggle_imag.clicked.connect(self.on_toggle_invert)
@@ -76,15 +76,15 @@ class DataImportPreprocessor(QtWidgets.QDialog):
         ctrl_layout.addStretch()
         main_layout.addLayout(ctrl_layout)
         
-        main_layout.addWidget(QtWidgets.QLabel("<b>數據解析實時預覽 (僅顯示前30行):</b>"))
+        main_layout.addWidget(QtWidgets.QLabel("<b>Real-time Data Preview (first 30 rows):</b>"))
         self.table_widget = QtWidgets.QTableWidget()
         main_layout.addWidget(self.table_widget)
         
         btn_layout = QtWidgets.QHBoxLayout()
-        btn_cancel = QtWidgets.QPushButton("取消導入")
+        btn_cancel = QtWidgets.QPushButton("Cancel")
         btn_cancel.clicked.connect(self.reject)
         
-        btn_confirm = QtWidgets.QPushButton("確定導入主程式 (Confirm)")
+        btn_confirm = QtWidgets.QPushButton("Confirm and Import")
         btn_confirm.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold; height: 30px;")
         btn_confirm.clicked.connect(self.on_confirm)
         
@@ -124,7 +124,7 @@ class DataImportPreprocessor(QtWidgets.QDialog):
                         item.setBackground(QtGui.QColor("#FFF9C4"))
                     self.table_widget.setItem(row_idx, col_idx, item)
             self.table_widget.resizeColumnsToContents()
-        except Exception as e: print(f"預覽解析異常: {e}")
+        except Exception as e: print(f"Preview parsing error: {e}")
 
     def on_skip_changed(self):
         self.skip_rows = self.spin_skip.value()
@@ -157,24 +157,24 @@ class DataImportPreprocessor(QtWidgets.QDialog):
                     except ValueError: continue
             
             if not full_data:
-                QtWidgets.QMessageBox.warning(self, "錯誤", "未找到有效的數值阻抗數據，請檢查 Skip Rows 設定。")
+                QtWidgets.QMessageBox.warning(self, "Error", "No valid numeric impedance data found. Please check the Skip Rows setting.")
                 return
                 
             self.final_df = pd.DataFrame(full_data, columns=['freq', 'Z_prime', 'Z_double_prime'])
             self.accept()
         except Exception as e:
-            QtWidgets.QMessageBox.critical(self, "異常", f"數據封裝失敗: {e}")
+            QtWidgets.QMessageBox.critical(self, "Error", f"Data packaging failed: {e}")
 
 
 # ==========================================
-# 模組 2: 互動式噪聲點修飾 (DataCleaningWindow)
+# Module 2: Interactive Noisy Point Removal (DataCleaningWindow)
 # ==========================================
 class DataCleaningWindow(QtWidgets.QDialog):
     def __init__(self, parent_gui, eis_data):
         super().__init__(parent_gui)
         self.parent_gui = parent_gui
         self.data = eis_data
-        self.setWindowTitle("EIS 實驗跳動點修飾介面 (Interactive Data Cleaner)")
+        self.setWindowTitle("EIS Interactive Data Cleaning Interface")
         self.resize(1300, 800)
         
         self.freq_list = list(self.data.freq)
@@ -189,35 +189,35 @@ class DataCleaningWindow(QtWidgets.QDialog):
         main_layout = QtWidgets.QHBoxLayout(self)
         ctrl_layout = QtWidgets.QVBoxLayout()
         
-        ctrl_layout.addWidget(QtWidgets.QLabel("<h3>互動式數據修飾控制</h3>"))
-        ctrl_layout.addWidget(QtWidgets.QLabel("💡 <b>操作說明:</b><br>直接用滑鼠點擊右側 <b>Nyquist 圖</b>上的任意圓點即可剔除該噪聲點。"))
-        
-        self.lbl_count = QtWidgets.QLabel("當前剩餘點數: --")
+        ctrl_layout.addWidget(QtWidgets.QLabel("<h3>Interactive Data Cleaning Controls</h3>"))
+        ctrl_layout.addWidget(QtWidgets.QLabel("<b>Instructions:</b><br>Click any data point on the <b>Nyquist plot</b> to remove that noisy point."))
+
+        self.lbl_count = QtWidgets.QLabel("Current remaining points: --")
         self.lbl_count.setStyleSheet("font-weight: bold; color: #1565C0;")
         ctrl_layout.addWidget(self.lbl_count)
         
-        ctrl_layout.addWidget(QtWidgets.QLabel("<b>當前有效數據點清單:</b>"))
+        ctrl_layout.addWidget(QtWidgets.QLabel("<b>Current Active Data Points:</b>"))
         self.list_widget = QtWidgets.QListWidget()
         ctrl_layout.addWidget(self.list_widget)
         
-        btn_undo = QtWidgets.QPushButton("↩️ 復原上一步刪除 (Undo)")
+        btn_undo = QtWidgets.QPushButton("↩️ Undo Last Deletion")
         btn_undo.clicked.connect(self.undo_last_deletion)
         ctrl_layout.addWidget(btn_undo)
         
-        btn_reset = QtWidgets.QPushButton("🔄 重置所有修改 (Reset)")
+        btn_reset = QtWidgets.QPushButton("Reset All Changes")
         btn_reset.clicked.connect(self.reset_data)
         ctrl_layout.addWidget(btn_reset)
         
         ctrl_layout.addSpacing(20)
         
-        btn_confirm = QtWidgets.QPushButton("💾 完成修飾，儲存並返回主介面")
+        btn_confirm = QtWidgets.QPushButton("Apply Cleaning and Return")
         btn_confirm.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold; height: 35px;")
         btn_confirm.clicked.connect(self.on_confirm_save)
         ctrl_layout.addWidget(btn_confirm)
         main_layout.addLayout(ctrl_layout, stretch=1)
         
         plot_lay = QtWidgets.QVBoxLayout()
-        # 🚀 使用純 OOP Figure
+        # Use pure OOP Figure
         self.figure = Figure(figsize=(8, 8))
         self.ax_nyq = self.figure.add_subplot(211)
         self.ax_bode = self.figure.add_subplot(212)
@@ -231,7 +231,7 @@ class DataCleaningWindow(QtWidgets.QDialog):
         self.canvas.mpl_connect('pick_event', self.on_pick)
 
     def refresh_plots_and_list(self):
-        self.lbl_count.setText(f"當前有效數據點數: {len(self.freq_list)} 點")
+        self.lbl_count.setText(f"Current active data points: {len(self.freq_list)}")
         self.list_widget.clear()
         for i in range(len(self.freq_list)):
             self.list_widget.addItem(f"[{i+1}] Freq: {self.freq_list[i]:.2f} Hz | Z: {self.z_prime_list[i]:.2f} + j({self.z_double_list[i]:.2f})")
@@ -286,50 +286,50 @@ class DataCleaningWindow(QtWidgets.QDialog):
 
     def on_confirm_save(self):
         if len(self.freq_list) < 5:
-            QtWidgets.QMessageBox.warning(self, "警告", "剩餘點數太少，無法進行後續運算！")
+            QtWidgets.QMessageBox.warning(self, "Warning", "Too few data points remaining — cannot proceed with subsequent computation!")
             return
             
         import numpy as np
         from scipy.interpolate import pchip_interpolate
         from .runs import EIS_object
         
-        # 1. 取得用戶修剪後剩餘的「乾淨數據點」
+        # 1. Retrieve the "clean data points" remaining after user trimming
         clean_f = np.array(self.freq_list)
         clean_z1 = np.array(self.z_prime_list)
         clean_z2 = np.array(self.z_double_list)
         
-        # 2. 確保頻率從小到大排序 (插值演算法的嚴格要求)
+        # 2. Ensure frequencies are sorted ascending (strict requirement for interpolation)
         idx_sort = np.argsort(clean_f)
         clean_f = clean_f[idx_sort]
         clean_z1 = clean_z1[idx_sort]
         clean_z2 = clean_z2[idx_sort]
         
-        # 3. 🚀 拯救矩陣的核心：建立「完美均勻」的對數頻率網格！
-        # 我們維持與原始數據相同的點數，確保矩陣維度不變
+        # 3. Core matrix rescue: construct a "perfectly uniform" log-frequency grid!
+        # Maintain the same number of points as the original data to preserve matrix dimensions
         num_points = len(self.data.freq) 
         uniform_f = np.logspace(np.log10(clean_f[0]), np.log10(clean_f[-1]), num_points)
         
-        # 4. 執行 PCHIP 保形插值 (PCHIP 不會在缺口處產生失真的物理震盪)
+        # 4. Perform PCHIP shape-preserving interpolation (PCHIP avoids spurious oscillations at gaps)
         log_clean_f = np.log10(clean_f)
         log_uniform_f = np.log10(uniform_f)
         
         uniform_z1 = pchip_interpolate(log_clean_f, clean_z1, log_uniform_f)
         uniform_z2 = pchip_interpolate(log_clean_f, clean_z2, log_uniform_f)
         
-        # 5. EIS 的標準慣例：頻率通常由高到低排列
-        # uniform_f 目前是由小到大，我們將其反轉
+        # 5. Standard EIS convention: frequencies are typically ordered high-to-low
+        # uniform_f is currently ascending; reverse it
         uniform_f = uniform_f[::-1]
         uniform_z1 = uniform_z1[::-1]
         uniform_z2 = uniform_z2[::-1]
             
-        # 6. 將這份絕對平滑、網格絕對等距的健康數據，重新灌入 pyDRTtools！
+        # 6. Feed this perfectly smooth, uniformly gridded healthy data back into pyDRTtools!
         self.parent_gui.data = EIS_object(uniform_f, uniform_z1, uniform_z2)
         self.parent_gui.inductance_callback()
         self.accept()
 
 
 # ==========================================
-# 模組 3: 高斯峰值物理拆解 (Stage2Window)
+# Module 3: Gaussian Peak Decomposition (Stage2Window)
 # ==========================================
 class Stage2Window(QtWidgets.QDialog):
     def __init__(self, parent_gui, eis_data, initial_peaks=3):
@@ -337,7 +337,7 @@ class Stage2Window(QtWidgets.QDialog):
         self.parent_gui = parent_gui
         self.data = eis_data
         self.initial_peaks = initial_peaks
-        self.setWindowTitle("Stage 2: DRT Peak Fitting (OpenEIS)")
+        self.setWindowTitle("Stage 2: DRT Peak Fitting (DRTxECM)")
         self.resize(1200, 750)
         
         self.tau_data = self.data.out_tau_vec
@@ -355,23 +355,23 @@ class Stage2Window(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout(self)
         ctrl_layout = QtWidgets.QVBoxLayout()
         
-        info_lbl = QtWidgets.QLabel(f"<b>Stage 1 基礎解耦</b><br>R_ohm: {self.ohmic_R:.4e} Ω<br>L: {self.inductance_L:.4e} H")
+        info_lbl = QtWidgets.QLabel(f"<b>Stage 1 Baseline Decoupling</b><br>R_ohm: {self.ohmic_R:.4e} Ω<br>L: {self.inductance_L:.4e} H")
         ctrl_layout.addWidget(info_lbl)
         
         peak_cnt_lay = QtWidgets.QHBoxLayout()
-        peak_cnt_lay.addWidget(QtWidgets.QLabel("設定峰值數量:"))
+        peak_cnt_lay.addWidget(QtWidgets.QLabel("Number of Peaks:"))
         self.spin_peaks = QtWidgets.QSpinBox()
         self.spin_peaks.setRange(1, 8)
         self.spin_peaks.setValue(self.initial_peaks)
         self.spin_peaks.valueChanged.connect(self.update_peak_table)
         peak_cnt_lay.addWidget(self.spin_peaks)
         
-        # 🚀 變更點 1: 改為「CSV 匯出數據抽樣步長」，用來解決曲線數據過於冗長/精細的問題
-        peak_cnt_lay.addWidget(QtWidgets.QLabel(" | CSV 匯出步長:"))
+        # Change 1: Use "CSV export data subsampling step" to solve excessive curve data issue
+        peak_cnt_lay.addWidget(QtWidgets.QLabel(" | CSV Export Step:"))
         self.spin_export_step = QtWidgets.QSpinBox()
         self.spin_export_step.setRange(1, 100)
-        self.spin_export_step.setValue(1) # 預設 1 (匯出全部)
-        self.spin_export_step.setToolTip("設定 CSV 匯出時的數據點跳躍間隔。設為 3 代表每 3 個點取 1 個，大幅縮減 CSV 表格行數。")
+        self.spin_export_step.setValue(1) # Default 1 (export all)
+        self.spin_export_step.setToolTip("Set the data point skip interval for CSV export. A value of 3 means sample 1 out of every 3 points, greatly reducing CSV row count.")
         peak_cnt_lay.addWidget(self.spin_export_step)
         
         ctrl_layout.addLayout(peak_cnt_lay)
@@ -383,21 +383,21 @@ class Stage2Window(QtWidgets.QDialog):
         self.scroll.setWidget(self.scroll_content)
         ctrl_layout.addWidget(self.scroll)
         
-        btn_guess = QtWidgets.QPushButton("檢視初始猜測 (Plot Guess)")
+        btn_guess = QtWidgets.QPushButton("View Initial Guess (Plot Guess)")
         btn_guess.clicked.connect(self.plot_current_guess)
         ctrl_layout.addWidget(btn_guess)
         
-        btn_fit = QtWidgets.QPushButton("執行高斯擬合 (Fit DRT)")
+        btn_fit = QtWidgets.QPushButton("Execute Gaussian Fit")
         btn_fit.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold;")
         btn_fit.clicked.connect(self.run_fitting)
         ctrl_layout.addWidget(btn_fit)
         
-        btn_csv = QtWidgets.QPushButton("匯出 Stage 2 拆解報表 (.csv)")
+        btn_csv = QtWidgets.QPushButton("Export Stage 2 Decomposition Report (.csv)")
         btn_csv.setStyleSheet("background-color: #FF9800; color: white; font-weight: bold; height: 30px;")
         btn_csv.clicked.connect(self.export_stage2_csv)
         ctrl_layout.addWidget(btn_csv)
         
-        btn_next = QtWidgets.QPushButton("匯出至 Stage 3 (CPE 微調)")
+        btn_next = QtWidgets.QPushButton("Export to Stage 3 (CPE Fine-Tuning)")
         btn_next.setStyleSheet("background-color: #2196F3; color: white; font-weight: bold;")
         btn_next.clicked.connect(self.export_to_stage3)
         ctrl_layout.addWidget(btn_next)
@@ -419,7 +419,7 @@ class Stage2Window(QtWidgets.QDialog):
             w['amp'].deleteLater(); w['cen'].deleteLater(); w['wid'].deleteLater()
             w['fix_amp'].deleteLater(); w['fix_cen'].deleteLater(); w['fix_wid'].deleteLater()
         self.peak_widgets.clear()
-        headers = ["峰", "Amp", "Fix", "Pos(x)", "Fix", "Width", "Fix"]
+        headers = ["Peak", "Amp", "Fix", "Pos(x)", "Fix", "Width", "Fix"]
         for col, h in enumerate(headers):
             self.grid.addWidget(QtWidgets.QLabel(f"<b>{h}</b>"), 0, col)
             
@@ -477,13 +477,13 @@ class Stage2Window(QtWidgets.QDialog):
             params, _ = self.get_params()
             self.plot_raw_data(multi_gaussian(self.x_data, *params))
         except Exception as e:
-            QtWidgets.QMessageBox.warning(self, "錯誤", f"參數讀取錯誤: {e}")
+            QtWidgets.QMessageBox.warning(self, "Error", f"Parameter read error: {e}")
 
     def run_fitting(self):
         try:
             initial_guess, bounds = self.get_params()
             
-            # 回歸全數據擬合，確保物理正確性與精度
+            # Fit against full dataset to ensure physical correctness and accuracy
             popt, _ = curve_fit(multi_gaussian, self.x_data, self.y_data, p0=initial_guess, bounds=bounds, maxfev=10000)
             
             triplets = []
@@ -501,12 +501,12 @@ class Stage2Window(QtWidgets.QDialog):
                 w["wid"].setText(f"{popt_sorted[i*3+2]:.3f}")
                 
             self.plot_raw_data(multi_gaussian(self.x_data, *popt_sorted))
-            QtWidgets.QMessageBox.information(self, "成功", "高斯自動擬合完成！（峰已依時間常數由小到大嚴格排序）")
+            QtWidgets.QMessageBox.information(self, "Success", "Gaussian fitting completed! (Peaks are strictly ordered by time constant, ascending.)")
         except Exception as e:
-            QtWidgets.QMessageBox.critical(self, "失敗", f"擬合未收斂: {e}")
+            QtWidgets.QMessageBox.critical(self, "Failed", f"Fitting did not converge: {e}")
 
     def export_stage2_csv(self):
-        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "儲存 Stage 2 數據分層解耦報表", "", "CSV Files (*.csv)")
+        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Stage 2 Decomposed Layer Report", "", "CSV Files (*.csv)")
         if not path: return
         
         params, _ = self.get_params()
@@ -515,7 +515,7 @@ class Stage2Window(QtWidgets.QDialog):
             triplets.append(params[i:i+3])
         triplets.sort(key=lambda x: x[1]) 
         
-        # 垂直排列的 Meta 資料區塊
+        # Vertically stacked Meta data block
         meta_rows = [
             ["--- Stage 1 Parameters ---"],
             ["R_ohm", f"{self.ohmic_R:.6e}"],
@@ -542,7 +542,7 @@ class Stage2Window(QtWidgets.QDialog):
         for t in triplets: flat_sorted_params.extend(t)
         
         data_body = []
-        # 🚀 變更點 2: 讀取介面上的「匯出步長」，大幅精簡生成的行數
+        # Change 2: Read the "export step" from the UI to greatly reduce the number of rows generated
         step = self.spin_export_step.value()
         
         for i in range(0, len(self.x_data), step):
@@ -550,7 +550,7 @@ class Stage2Window(QtWidgets.QDialog):
             y_raw = self.y_data[i]
             y_fit_total = multi_gaussian(x_val, *flat_sorted_params)
             
-            # 🚀 變更點 3: 強制限制所有小數位數為科學記號後 6 位，拒絕肥大數據
+            # Change 3: Enforce 6-digit scientific notation for all floats, rejecting bloated data
             row = [f"{np.exp(x_val):.6e}", f"{x_val:.6e}", f"{y_raw:.6e}", f"{y_fit_total:.6e}"]
             for t in triplets:
                 amp, cen, wid = t
@@ -567,9 +567,9 @@ class Stage2Window(QtWidgets.QDialog):
                 writer.writerow(["--- Frequency-Time Domain Peak Fitting Curves Block ---"])
                 writer.writerow(data_headers)
                 writer.writerows(data_body)
-            QtWidgets.QMessageBox.information(self, "成功", f"高級 DRT 峰值解耦報表已成功導出至:\n{path}")
+            QtWidgets.QMessageBox.information(self, "Success", f"Advanced DRT peak decomposition report successfully exported to:\n{path}")
         except Exception as e:
-            QtWidgets.QMessageBox.critical(self, "錯誤", f"儲存失敗: {e}")
+            QtWidgets.QMessageBox.critical(self, "Error", f"Save failed: {e}")
 
     def export_to_stage3(self):
         params, _ = self.get_params()
@@ -591,7 +591,7 @@ class Stage2Window(QtWidgets.QDialog):
         s3.exec_()
 
 # ==========================================
-# 模組 4: 等效電路 ZView 級微調與優化 (Stage3Window)
+# Module 4: Equivalent Circuit DRTxECM-Level Fine-Tuning (Stage3Window)
 # ==========================================
 class Stage3Window(QtWidgets.QDialog):
     def __init__(self, parent_gui, eis_data, ohmic_r, induct_l, initial_peaks):
@@ -604,7 +604,7 @@ class Stage3Window(QtWidgets.QDialog):
         self.param_widgets = {}
         self.z_sim_current = None
         
-        self.setWindowTitle("Stage 3: ECM Fine-Tune Panel (ZView Error Mode)")
+        self.setWindowTitle("Stage 3: ECM Fine-Tune Panel (DRTxECM)")
         self.resize(1600, 950)
         
         self.init_ui(ohmic_r, induct_l)
@@ -614,7 +614,7 @@ class Stage3Window(QtWidgets.QDialog):
         layout = QtWidgets.QHBoxLayout(self)
         
         ctrl_lay = QtWidgets.QVBoxLayout()
-        ctrl_lay.addWidget(QtWidgets.QLabel("<h3>ECM 參數微調與統計估算</h3>"))
+        ctrl_lay.addWidget(QtWidgets.QLabel("<h3>ECM Parameter Fine-Tuning & Statistical Estimation</h3>"))
         
         self.scroll = QtWidgets.QScrollArea()
         self.scroll.setWidgetResizable(True)
@@ -639,7 +639,7 @@ class Stage3Window(QtWidgets.QDialog):
             self.add_param_row(f"n_{i+1}", p['alpha'], row_idx+2, is_fixed=True)
             row_idx += 3
             
-        self.lbl_rmse = QtWidgets.QLabel("當前複數阻抗 RMSE: --")
+        self.lbl_rmse = QtWidgets.QLabel("Complex Impedance RMSE: --")
         self.lbl_rmse.setStyleSheet("color: #D32F2F; font-weight: bold; font-size: 13px;")
         ctrl_lay.addWidget(self.lbl_rmse)
         
@@ -660,7 +660,7 @@ class Stage3Window(QtWidgets.QDialog):
         layout.addLayout(ctrl_lay, stretch=4)
         
         plot_lay = QtWidgets.QVBoxLayout()
-        # 保持上下排版，並提供足夠高度
+        # Maintain vertical layout with sufficient height
         self.figure = Figure(figsize=(10, 12))
         self.ax_nyq = self.figure.add_subplot(211)
         self.ax_bode_m = self.figure.add_subplot(212)
@@ -682,7 +682,7 @@ class Stage3Window(QtWidgets.QDialog):
         else:
             combo.setCurrentIndex(0)
         
-        #去除變更後自動計算功能
+        # Disable auto-recalculate on change
         #combo.currentIndexChanged.connect(self.run_simulation)
         ent = QtWidgets.QLineEdit(f"{val:.4e}")
         #ent.textChanged.connect(self.run_simulation)
@@ -715,7 +715,7 @@ class Stage3Window(QtWidgets.QDialog):
             self.z_sim_current = ecm_circuit_solver(self.freq, r_ohm, l_ind, p_list)
             
             rmse = np.sqrt(np.mean(np.abs(self.z_exp - self.z_sim_current)**2))
-            self.lbl_rmse.setText(f"當前複數阻抗加權 RMSE: {rmse:.5e} Ohm")
+            self.lbl_rmse.setText(f"Complex impedance weighted RMSE: {rmse:.5e} Ohm")
             self.refresh_plots()
         except Exception as e:
             pass
@@ -733,7 +733,7 @@ class Stage3Window(QtWidgets.QDialog):
         r_ohm, l_ind, p_list = self.read_ui_params()
         w = 2 * np.pi * self.freq
         
-        # 🚀 修正點：建立一個累計偏移量，起點為歐姆內阻
+        # Fix: Build a cumulative offset starting from ohmic resistance
         current_offset = r_ohm
         
         for i, p in enumerate(p_list):
@@ -743,11 +743,11 @@ class Stage3Window(QtWidgets.QDialog):
                 Z_branch = 1.0 / (1.0 / R + 1.0 / Z_CPE_single)
                 
                 color_idx = i % len(peak_colors)
-                # 將該分支的實部加上目前的累計偏移量
+                # Add the current cumulative offset to the real part of this branch
                 self.ax_nyq.plot(Z_branch.real + current_offset, -Z_branch.imag, '--', 
                                  color=peak_colors[color_idx], linewidth=1.5, label=f'Branch {i+1} (R//CPE)')
                 
-                # 🚀 畫完這個分支後，把它的電阻 R 加進偏移量，作為下一個分支的起點
+                # After drawing this branch, add its resistance R to the offset as the starting point of the next branch
                 current_offset += R
         
         self.ax_nyq.set_xlabel("Z' (Ohm)", fontsize=l_font)
@@ -798,7 +798,7 @@ class Stage3Window(QtWidgets.QDialog):
                 else: bounds.append((0.0, np.inf))
                 
         if not x0:
-            QtWidgets.QMessageBox.information(self, "提示", "所有參數均被鎖定為 Fixed 狀態！")
+            QtWidgets.QMessageBox.information(self, "Info", "All parameters are locked in Fixed state!")
             return
             
         def objective(x):
@@ -861,26 +861,26 @@ class Stage3Window(QtWidgets.QDialog):
                         w['err'].setText(f"{abs_err:.4e}")
                         w['err_p'].setText(f"{rel_err_p:.2f}%")
                     else:
-                        w['err'].setText("估算中")
-                        w['err_p'].setText("＜15%")
+                        w['err'].setText("Estimating...")
+                        w['err_p'].setText("<15%")
                 else:
                     w['err'].setText("N/A")
                     w['err_p'].setText("N/A")
                     
             self.run_simulation()
-            QtWidgets.QMessageBox.information(self, "成功", "等效電路 CNLS 參數疊代優化完成！")
+            QtWidgets.QMessageBox.information(self, "Success", "Equivalent circuit CNLS parameter iterative optimization complete!")
         else:
-            QtWidgets.QMessageBox.warning(self, "失敗", "優化器未能在預期步數內收斂。")
+            QtWidgets.QMessageBox.warning(self, "Failed", "Optimizer failed to converge within the expected number of steps.")
 
     def export_merged_report(self):
-        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "儲存全功能 EIS 分支拆解報表", "", "CSV Files (*.csv)")
+        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Full-Feature EIS Branch Decomposition Report", "", "CSV Files (*.csv)")
         if not path: return
         
         r_ohm, l_ind, p_list = self.read_ui_params()
         w = 2 * np.pi * self.freq
         
         param_rows = [
-            ["--- ECM Fitting Parameter Table (ZView Style) ---"],
+            ["--- ECM Fitting Parameter Table (DRTxECM Style) ---"],
             ["Element", "Freedom", "Value", "Error", "Error%"]
         ]
         for k, w_box in self.param_widgets.items():
@@ -903,7 +903,7 @@ class Stage3Window(QtWidgets.QDialog):
         mag_exp, theta_exp = np.abs(self.z_exp), -np.angle(self.z_exp, deg=True)
         mag_sim, theta_sim = np.abs(self.z_sim_current), -np.angle(self.z_sim_current, deg=True)
         
-        # 🚀 修正點：在計算各分支矩陣時，同時記錄它專屬的 X 軸偏移量
+        # Fix: When computing per-branch matrix, also record its dedicated X-axis offset
         branch_z_matrices = []
         branch_offsets = []
         current_offset = r_ohm
@@ -915,7 +915,7 @@ class Stage3Window(QtWidgets.QDialog):
                 Z_branch = 1.0 / (1.0 / R + 1.0 / Z_CPE_single)
                 branch_z_matrices.append(Z_branch)
                 branch_offsets.append(current_offset)
-                current_offset += R  # 累計下一個半圓的起點
+                current_offset += R  # Accumulate starting point for next semicircle
             else:
                 branch_z_matrices.append(np.zeros_like(self.freq, dtype=complex))
                 branch_offsets.append(current_offset)
@@ -928,7 +928,7 @@ class Stage3Window(QtWidgets.QDialog):
                 self.z_sim_current[i].real, -self.z_sim_current[i].imag, mag_sim[i], theta_sim[i]
             ]
             for k in range(len(p_list)):
-                # 寫入 CSV 時，實部加上該分支專屬的累計偏移量
+                # When writing CSV, add the branch's dedicated cumulative offset to the real part
                 row.append(branch_z_matrices[k][i].real + branch_offsets[k])
                 row.append(-branch_z_matrices[k][i].imag)
                 
@@ -942,6 +942,6 @@ class Stage3Window(QtWidgets.QDialog):
                 writer.writerow(["--- Merged Frequency Response Breakdown Data Block ---"])
                 writer.writerow(data_headers)
                 writer.writerows(data_body)
-            QtWidgets.QMessageBox.information(self, "成功", f"包含單獨 RC 分支串聯拆解數據的報表已成功匯出至:\n{path}")
+            QtWidgets.QMessageBox.information(self, "Success", f"Report with individual series RC branch decomposition data successfully exported to:\n{path}")
         except Exception as e:
-            QtWidgets.QMessageBox.critical(self, "錯誤", f"儲存失敗: {e}")
+            QtWidgets.QMessageBox.critical(self, "Error", f"Save failed: {e}")

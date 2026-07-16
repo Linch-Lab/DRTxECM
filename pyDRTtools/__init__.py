@@ -23,6 +23,7 @@ modules = [
     "basics", 
     "BHT", 
     "cli", 
+    "extensions",
     "GUI", 
     "HMC",
     "layout", 
@@ -43,6 +44,9 @@ for module in modules:
 
 __all__ = [
     'basics',
+    'BHT',
+    'cli',
+    'extensions',
     'GUI',
     'layout',
     'parameter_selection',

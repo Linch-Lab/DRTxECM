@@ -18,7 +18,7 @@ import matplotlib as mpl
 mpl.use("Qt5Agg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-# 約在檔案第 17 行，也就是引入 matplotlib 相關模組的地方附近，加入這行：
+# Import extensions for Stage 2/3, data preprocessing, and cleaning
 from .extensions import Stage2Window, Stage3Window, DataImportPreprocessor, DataCleaningWindow
 
 
@@ -56,7 +56,7 @@ class GUI(QtWidgets.QMainWindow):
         self.ui.bayesian_button.clicked.connect(self.bayesian_run_callback)
         self.ui.HT_button.clicked.connect(self.BHT_run_callback)
 
-        # ⚠️ 【修改這裡】將原本的 self.peak_analysis_run_callback 改掉
+        # [MODIFIED] Replace original self.peak_analysis_run_callback
         self.ui.peak_decon_button.clicked.connect(self.open_stage2_interface)
         #self.ui.peak_decon_button.clicked.connect(self.peak_analysis_run_callback)
         
@@ -65,33 +65,33 @@ class GUI(QtWidgets.QMainWindow):
         self.ui.export_EIS_button.clicked.connect(self.export_EIS)
         self.ui.export_fig_button.clicked.connect(self.export_fig)
        
-        # 🚀 【本次新增：零干擾動態注入數據修飾入口】
-        # 在主視窗最上方的空白選單列，新增一個醒目的獨立按鈕
-        self.clean_action = QtWidgets.QAction("🔧 Clean Noise Data", self)
-        # 設定快捷鍵，按下 Ctrl+D 也能快速呼叫
+        # [NEW] Zero-interference dynamic injection of data cleaning entry point
+        # Add a prominent standalone button to the top menu bar
+        self.clean_action = QtWidgets.QAction("Clean Noise Data", self)
+        # Set shortcut Ctrl+D for quick access
         self.clean_action.setShortcut("Ctrl+D") 
         self.clean_action.triggered.connect(self.open_data_cleaning_interface)
         
-        # 將其加入選單列
+        # Add it to the menu bar
         self.ui.menubar.addAction(self.clean_action)
         
         from PyQt5 import QtCore
-        # 1. 隱藏不需要的舊版原廠元件
+        # 1. Hide unneeded legacy original components
         self.ui.peak_method_label.hide()
         self.ui.peak_method_choice.hide()
         self.ui.Peak_decon_run.hide()
         
-        # 2. 將 "Number of peaks" 標籤與輸入框往上移動，完美填補空缺
+        # 2. Move "Number of peaks" label and input upward to fill the gap
         self.ui.reg_param_2.setGeometry(QtCore.QRect(10, 30, 121, 16))
         self.ui.peak_num_entry.setGeometry(QtCore.QRect(170, 25, 81, 21))
-        self.ui.peak_num_entry.setText("3") # 給予最常用、友善的初始預設值
+        self.ui.peak_num_entry.setText("3") # Provide a sensible default
         
-        # 3. 將 Run 按鈕移到下方、橫向拉寬、縱向加高，霸氣填滿整個區塊
+        # 3. Move Run button downward, stretch horizontally and vertically to fill the block
         self.ui.peak_decon_button.setGeometry(QtCore.QRect(10, 70, 241, 30))
         self.ui.peak_decon_button.setText("Launch Stage 2 (Peak Analysis)")
         self.ui.peak_decon_button.setStyleSheet("background-color: #2196F3; color: white; font-weight: bold;")
         
-        # 4. 安全清空與重新綁定按鈕，保證 100% 正確執行 open_stage2_interface
+        # 4. Safely disconnect and rebind button to guarantee correct execution of open_stage2_interface
         try:
             self.ui.peak_decon_button.clicked.disconnect()
         except Exception:
@@ -100,65 +100,64 @@ class GUI(QtWidgets.QMainWindow):
 
 
     def open_data_cleaning_interface(self):
-        """彈出互動式 EIS 數據修飾跳動點對話盒"""
+        """Launch the interactive EIS data cleaning dialog for outlier removal."""
         if self.data is None:
-            QtWidgets.QMessageBox.warning(self, "警告", "主程式中尚未載入任何 EIS 數據！請先點擊 Import 導入檔案。")
+            QtWidgets.QMessageBox.warning(self, "Warning", "No EIS data loaded! Please click Import to load a data file first.")
             return
             
         cleaner_dialog = DataCleaningWindow(self, self.data)
         if cleaner_dialog.exec_() == QtWidgets.QDialog.Accepted:
-            self.statusBar().showMessage("數據點修飾完畢！已被成功同步至主介面。", 2000)
+            self.statusBar().showMessage("Data cleaning complete! Cleaned data synchronized to the main interface.", 2000)
            # self.plotting_callback('EIS_data')
 
 
 
-    # ⚠️ 【新增這個函數】這將是通往 Stage 2 的大門
+    # [NEW FUNCTION] Gateway to Stage 2
     def open_stage2_interface(self):
-        #"""開啟第二階段：高斯峰值互動擬合視窗 (已完美整合主介面數量聯動)"""
-        # 安全檢查：確保使用者已經載入數據並且執行了 Run 算出 DRT
+        #"""Open Stage 2: Gaussian peak interactive fitting window (fully integrated with main UI peak count)"""
+        # Safety check: ensure data is loaded and Run has been executed
         if self.data is None or not hasattr(self.data, 'gamma'):
-            QtWidgets.QMessageBox.warning(self, "警告", "請先點擊上方 Run 計算出 DRT 曲線數據！")
+            QtWidgets.QMessageBox.warning(self, "Warning", "Please click Run first to compute the DRT curve!")
             return
             
-        # 🚀 核心聯動改動：讀取主介面上的 Number of peaks 輸入框數值
+        # Core integration: read the Number of peaks value from the main UI
         try:
             initial_peaks = int(self.ui.peak_num_entry.text())
-            # 限制合理邊界
+            # Clamp to reasonable bounds
             if initial_peaks < 1: initial_peaks = 1
             if initial_peaks > 8: initial_peaks = 8
         except ValueError:
-            initial_peaks = 3  # 如果使用者不小心留白或輸入文字，防呆預設給 3 峰
+            initial_peaks = 3  # Fallback: default to 3 peaks if the user left the field blank or entered invalid text
             self.ui.peak_num_entry.setText("3")
             
-        # 開啟 Stage 2 視窗，並把讀取到的峰值數量 (initial_peaks) 當作第三個參數傳進去！
+        # Open Stage 2 window, passing the retrieved peak count as the third argument!
         self.stage2_dialog = Stage2Window(self, self.data, initial_peaks)
         self.stage2_dialog.exec_()
 
 
     def import_file(self):
-        # 1. 彈出檔案選擇對話盒
+        # 1. Show file selection dialog
         path, ext = QFileDialog.getOpenFileName(None, "Please choose an EIS data file", "", "All Files (*);; CSV files (*.csv);; TXT files (*.txt)") 
         
         if not path or not (path.endswith('.csv') or path.endswith('.txt')):
-            print('return')
             return
             
-        # 2. 🚀 【核心前處理手術】彈出交互式表格調校面板
+        # 2. [CORE PREPROCESSING] Launch interactive table-tuning panel
         preprocessor = DataImportPreprocessor(self, path)
         if preprocessor.exec_() == QtWidgets.QDialog.Accepted:
-            # 使用者在對話盒點擊了「確定導入」
+            # User clicked "Confirm and Import" in the dialog
             preprocessed_df = preprocessor.final_df
             
             if preprocessed_df is not None:
-                # 3. 將前處理（剔除前排、虛部取反）過後的乾淨 DataFrame 灌入 pyDRTtools 核心
+                # 3. Feed the preprocessed (skipped rows, imaginary sign flipped) clean DataFrame into pyDRTtools core
                 freq = preprocessed_df['freq'].to_numpy()
                 z_prime = preprocessed_df['Z_prime'].to_numpy()
                 z_double_prime = preprocessed_df['Z_double_prime'].to_numpy()
                 
-                # 實例化官方的 EIS_object
+                # Instantiate the official EIS_object
                 self.data = EIS_object(freq, z_prime, z_double_prime)
                 
-                # 4. 觸發官方後續聯動機制
+                # 4. Trigger the official downstream cascade
                 self.inductance_callback()
                 self.statusBar().showMessage('Successfully Preprocessed & Imported: %s' % path.split('/')[-1], 1500)
         else:
@@ -202,13 +201,13 @@ class GUI(QtWidgets.QMainWindow):
         shape_control = str(self.ui.shape_control_choice.currentText())
         coeff = float(self.ui.FWHM_entry.text())
         
-        # 2. 第一次計算 (Pass 1)：讓 runs.py 建立基礎矩陣
+        # 2. First computation (Pass 1): let runs.py build the base matrices
         self.data = simple_run(self.data, rbf_type = rbf_type, data_used = data_used, induct_used = induct_used,
                                der_used = der_used, cv_type = cv_type, reg_param = reg_param, shape_control = shape_control, coeff = coeff)
         
         entry = self.data
         
-        # 3. 找出真正的最佳化參數
+        # 3. Find the true optimal parameter
         if cv_type.lower() == 'custom':
             entry.lambda_value = reg_param
             self.ui.reg_param_entry_2.setText(f"{reg_param:.4e}")
@@ -219,19 +218,19 @@ class GUI(QtWidgets.QMainWindow):
             optim_val = float(np.atleast_1d(entry.lambda_value)[0])
             formatted_val = f"{optim_val:.4e}"
 
-            # 🚀 自動化步驟 A：幫你把算好的最佳值，同時填入「顯示框」與「主輸入框」！
+            # Auto-step A: Fill the computed optimal value into both the display and main input fields!
             self.ui.reg_param_entry_2.setText(formatted_val)
             self.ui.reg_param_entry.setText(formatted_val)
             
-            # 🚀 自動化步驟 B：替你「自動再按一次 Simple Run」！
-            # 將 reg_param 替換為剛算出來的最佳值 (optim_val) 並在背景瞬間重新運算
-            # 這一步確保了 runs.py 的 QP 矩陣求解，絕對是基於最佳值算出來的！
+            # Auto-step B: Automatically re-run Simple Run for you!
+            # Replace reg_param with the freshly computed optimal value (optim_val) and recompute silently
+            # This ensures the QP matrix solve in runs.py is based on the optimal value!
             self.data = simple_run(self.data, rbf_type = rbf_type, data_used = data_used, induct_used = induct_used,
                                    der_used = der_used, cv_type = cv_type, reg_param = optim_val, shape_control = shape_control, coeff = coeff)
             
-            #self.statusBar().showMessage(f"✅ 已自動填入最佳參數並完成 DRT 重算: {formatted_val}", 5000)
+            #self.statusBar().showMessage(f" Optimal parameter auto-filled and DRT recomputed: {formatted_val}", 5000)
 
-        # 4. 繪製 DRT 圖表 (此時的數據絕對是基於最佳值所計算的正確結果！)
+        # 4. Plot DRT (the data is now guaranteed to be based on the optimal value!)
         self.plotting_callback('DRT_data')
 
     def bayesian_run_callback(self): # callback for Bayesian regularization
@@ -441,7 +440,7 @@ class Figure_Canvas(FigureCanvas):
         plt.rc('xtick', labelsize = 15)
         plt.rc('ytick', labelsize = 15)
         
-        # 🚀 關鍵修改：將 plt.figure 改為 Figure，徹底避開記憶體追蹤！
+        # Critical fix: Replace plt.figure with Figure to completely avoid memory tracking!
         fig = Figure(figsize=(width, height), dpi=dpi) 
         
         # initalizing parent
@@ -455,7 +454,7 @@ class Figure_Canvas(FigureCanvas):
         
         if entry.method == 'BHT': # for BHT run
             self.axes.plot(entry.mu_Z_re, -entry.mu_Z_im, 
-                           'k', label = '$Z_\mu$(Regressed)', linewidth=3)
+                           'k', label = '$Z_\\mu$(Regressed)', linewidth=3)
             self.axes.plot(entry.mu_Z_H_re_agm, -entry.mu_Z_H_im_agm, 
                            'b', label = '$Z_H$(Hilbert transform)', linewidth=3)
             self.axes.plot(entry.Z_prime, -entry.Z_double_prime, 'or')
@@ -468,8 +467,8 @@ class Figure_Canvas(FigureCanvas):
         else: # no computation of the imported data yet
             self.axes.plot(entry.Z_prime, -entry.Z_double_prime, 'or')
         
-        self.axes.set_xlabel('$Z^{\prime}/\Omega$')
-        self.axes.set_ylabel('-$Z^{\prime \prime}/\Omega$')
+        self.axes.set_xlabel('$Z^{\\prime}/\\Omega$')
+        self.axes.set_ylabel('-$Z^{\\prime \\prime}/\\Omega$')
         self.axes.ticklabel_format(axis="both", style="sci", scilimits=(0,0))
         #self.axes.axis('equal')
         self.axes.set_aspect('equal', adjustable='datalim')
@@ -478,7 +477,7 @@ class Figure_Canvas(FigureCanvas):
         
         if entry.method == 'BHT': # for BHT run
             self.axes.semilogx(entry.freq, absolute(entry.mu_Z_re+1j*entry.mu_Z_im), 
-                               'k', label = '$Z_\mu$(Regressed)', linewidth=2)
+                               'k', label = '$Z_\\mu$(Regressed)', linewidth=2)
             self.axes.semilogx(entry.freq, absolute(entry.mu_Z_H_re_agm+1j*entry.mu_Z_H_im_agm),
                                'b', label = '$Z_H$(Hilbert transform)', linewidth=2)
             self.axes.semilogx(entry.freq, absolute(entry.Z_exp), 'or')
@@ -493,13 +492,13 @@ class Figure_Canvas(FigureCanvas):
         
         self.axes.set_xlim([min(entry.freq), max(entry.freq)])    
         self.axes.set_xlabel('$f/Hz$')
-        self.axes.set_ylabel('$|Z|/\Omega$')
+        self.axes.set_ylabel('$|Z|/\\Omega$')
         
     def Phase(self, entry): # plot the phase
         
         if entry.method == 'BHT': # for BHT run
             self.axes.semilogx(entry.freq, angle(entry.mu_Z_re+1j*entry.mu_Z_im, deg = True),
-                               'k', label = '$Z_\mu$(Regressed)', linewidth=2)
+                               'k', label = '$Z_\\mu$(Regressed)', linewidth=2)
             self.axes.semilogx(entry.freq, angle(entry.mu_Z_H_re_agm+1j*entry.mu_Z_H_im_agm, deg = True),
                                'b', label = '$Z_H$(Hilbert transform)', linewidth=2)
             self.axes.semilogx(entry.freq, angle(entry.Z_exp, deg = True), 'or')
@@ -514,13 +513,13 @@ class Figure_Canvas(FigureCanvas):
         
         self.axes.set_xlim([min(entry.freq), max(entry.freq)])    
         self.axes.set_xlabel('$f/Hz$')
-        self.axes.set_ylabel('$angle/^\circ$')
+        self.axes.set_ylabel('$angle/^\\circ$')
         
     def Re_data(self, entry): # plot the real part
         
         if entry.method == 'BHT': # for BHT run
             self.axes.fill_between(entry.freq, entry.mu_Z_H_re_agm-3*entry.band_re_agm, entry.mu_Z_H_re_agm+3*entry.band_re_agm,  facecolor='lightgrey')
-            self.axes.semilogx(entry.freq, entry.mu_Z_re, 'k', label = '$Z_\mu$(Regressed)', linewidth=3)
+            self.axes.semilogx(entry.freq, entry.mu_Z_re, 'k', label = '$Z_\\mu$(Regressed)', linewidth=3)
             self.axes.semilogx(entry.freq, entry.mu_Z_H_re_agm, 'b', label = '$Z_H$(Hilbert transform)', linewidth=3)
             self.axes.semilogx(entry.freq, entry.Z_prime, 'or')
             self.axes.legend(frameon = False, fontsize = 15, loc = 'upper left')
@@ -534,13 +533,13 @@ class Figure_Canvas(FigureCanvas):
         
         self.axes.set_xlim([min(entry.freq), max(entry.freq)])    
         self.axes.set_xlabel('$f/Hz$')
-        self.axes.set_ylabel('$Z^{\prime}/\Omega$')
+        self.axes.set_ylabel('$Z^{\\prime}/\\Omega$')
         
     def Im_data(self, entry): # plot of the imaginary part
         
         if entry.method == 'BHT': # for BHT run
             self.axes.fill_between(entry.freq, -entry.mu_Z_H_im_agm-3*entry.band_im_agm, -entry.mu_Z_H_im_agm+3*entry.band_im_agm,  facecolor='lightgrey')
-            self.axes.semilogx(entry.freq, -entry.mu_Z_im, 'k', label = '$Z_\mu$(Regressed)', linewidth=3)
+            self.axes.semilogx(entry.freq, -entry.mu_Z_im, 'k', label = '$Z_\\mu$(Regressed)', linewidth=3)
             self.axes.semilogx(entry.freq, -entry.mu_Z_H_im_agm, 'b', label = '$Z_H$(Hilbert transform)', linewidth=3)
             self.axes.semilogx(entry.freq, -entry.Z_double_prime, 'or')
             self.axes.legend(frameon = False, fontsize = 15, loc = 'upper left')
@@ -554,7 +553,7 @@ class Figure_Canvas(FigureCanvas):
         
         self.axes.set_xlim([min(entry.freq), max(entry.freq)])    
         self.axes.set_xlabel('$f/Hz$')
-        self.axes.set_ylabel('-$Z^{\prime \prime}/\Omega$')
+        self.axes.set_ylabel('-$Z^{\\prime \\prime}/\\Omega$')
         
     def Re_residual(self, entry): # plot the residuals of the real part of the impedance
         
@@ -565,13 +564,13 @@ class Figure_Canvas(FigureCanvas):
             self.axes.fill_between(entry.freq, -3*entry.band_re_agm, 3*entry.band_re_agm,  facecolor='lightgrey')
             self.axes.semilogx(entry.freq, entry.res_H_re, 'or')
             self.axes.set_xlabel('$f/Hz$')
-            self.axes.set_ylabel('$R_{\infty}+Z^{\prime}_{H}-Z^{\prime}_{exp}/\Omega$')
+            self.axes.set_ylabel('$R_{\\infty}+Z^{\\prime}_{H}-Z^{\\prime}_{exp}/\\Omega$')
             y_max = max(3*entry.band_re_agm)
         
         else: # for simple or Bayesian run
             self.axes.semilogx(entry.freq, entry.res_re, 'or')
             self.axes.set_xlabel('$f/Hz$')
-            self.axes.set_ylabel('$Z^{\prime}_{DRT}-Z^{\prime}_{exp}/\Omega$')
+            self.axes.set_ylabel('$Z^{\\prime}_{DRT}-Z^{\\prime}_{exp}/\\Omega$')
             y_max = max(absolute(entry.res_re))
         
         self.axes.set_xlim([min(entry.freq), max(entry.freq)])    
@@ -587,13 +586,13 @@ class Figure_Canvas(FigureCanvas):
             self.axes.fill_between(entry.freq, -3*entry.band_im_agm, 3*entry.band_im_agm,  facecolor='lightgrey')
             self.axes.semilogx(entry.freq, entry.res_H_im, 'or')
             self.axes.set_xlabel('$f/Hz$')
-            self.axes.set_ylabel('$\omega L_0+Z^{\prime \prime}_{H}-Z^{\prime\prime}_{exp}/\Omega$')
+            self.axes.set_ylabel('$\\omega L_0+Z^{\\prime \\prime}_{H}-Z^{\\prime\\prime}_{exp}/\\Omega$')
             y_max = max(3*entry.band_im_agm)
             
         else: # for simple or Bayesian run
             self.axes.semilogx(entry.freq, entry.res_im, 'or')
             self.axes.set_xlabel('$f/Hz$')
-            self.axes.set_ylabel('$Z^{\prime \prime}_{DRT}-Z^{\prime \prime}_{exp}/\Omega$')
+            self.axes.set_ylabel('$Z^{\\prime \\prime}_{DRT}-Z^{\\prime \\prime}_{exp}/\\Omega$')
             y_max = max(absolute(entry.res_im))
             
         self.axes.set_xlim([min(entry.freq), max(entry.freq)])    
@@ -640,8 +639,8 @@ class Figure_Canvas(FigureCanvas):
             y_min = 0
             y_max = max(entry.gamma)
         
-        self.axes.set_xlabel(r'$\tau/s$')
-        self.axes.set_ylabel(r'$\gamma( \tau)/\Omega$')
+        self.axes.set_xlabel(r'$\\tau/s$')
+        self.axes.set_ylabel(r'$\\gamma( \\tau)/\\Omega$')
         self.axes.set_ylim([y_min, 1.1*y_max])
         self.axes.set_xlim([min(entry.out_tau_vec), max(entry.out_tau_vec)])
     
@@ -666,9 +665,9 @@ class Figure_Canvas(FigureCanvas):
             self.axes.set_ylim([0, 125])
             self.axes.set_xlim([-0.5, 5.5])
             self.axes.set_xticks(x) 
-            self.axes.set_xticklabels((r'$s_{1\sigma}$', r'$s_{2\sigma}$', r'$s_{3\sigma}$', r'$s_{\mu}$', r'$s_{\rm HD}$', r'$s_{\rm JSD}$'))
+            self.axes.set_xticklabels((r'$s_{1\\sigma}$', r'$s_{2\\sigma}$', r'$s_{3\\sigma}$', r'$s_{\\mu}$', r'$s_{\\rm HD}$', r'$s_{\\rm JSD}$'))
             self.axes.set_yticks([0,50,100]) 
-            self.axes.set_ylabel(r'$\rm Scores (\%)$')
+            self.axes.set_ylabel(r'$\\rm Scores (\\%)$')
             
 if __name__ == "__main__": # starting the GUI when users run this file 
     
@@ -683,4 +682,3 @@ def launch_gui():
     MainWindow = GUI()
     MainWindow.show()
     app.exec_()    
-    

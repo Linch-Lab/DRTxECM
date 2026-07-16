@@ -30,18 +30,18 @@ dependencies = [
 ]
 
 setuptools.setup(
-    name = "pyDRTtools",
+    name = "DRTxECM",
     version = "0.2",
-    author = "ciuccislab",
+    author = "Linch-Lab",
     author_email = "amaradesa@connect.ust.hk",
-    description = "pyDRTtools: A Python-based DRTtools to Deconvolve the Distribution of Relaxation Times from Electrochemical Impedance Spectroscopy Data",
+    description = "DRTxECM: A DRTtools fork with ECM fitting extension — DRT-to-ECM parameter estimation and CPE phase-angle free fitting for Electrochemical Impedance Spectroscopy Data",
     long_description = readme(),
     long_description_content_type = "text/markdown",
     ###
-    url = "https://github.com/ciuccislab/pyDRTtools",
+    url = "https://github.com/Linch-Lab/DRTxECM",
     project_urls = {
-        "Source Code": "https://github.com/ciuccislab/pyDRTtools",
-        "Bug Tracker": "https://github.com/ciuccislab/pyDRTtools/issues",
+        "Source Code": "https://github.com/Linch-Lab/DRTxECM",
+        "Bug Tracker": "https://github.com/Linch-Lab/DRTxECM/issues",
     },
     entry_points=entry_points,
     #install_requires=dependencies,

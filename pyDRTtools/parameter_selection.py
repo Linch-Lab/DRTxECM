@@ -4,7 +4,6 @@ __authors__ = 'Francesco Ciucci, Adeleke Maradesa, Baptiste Py, Ting Hei Wan, Mo
 __date__ = '10th April, 2024'
 
 import numpy as np
-import sys
 import cvxopt
 from numpy import exp
 from math import log
@@ -14,8 +13,6 @@ from numpy.linalg import norm, cholesky
 from numpy import *
 from . import basics
 from . import nearest_PD as nPD
-#import basics
-print(sys.path)
 
 """
 References:

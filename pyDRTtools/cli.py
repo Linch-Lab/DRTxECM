@@ -1,4 +1,4 @@
-__authors__ = 'Ching-Hsien Lin modified fromFrancesco Ciucci, Adeleke Maradesa'
+__authors__ = 'Ching-Hsien Lin modified from Francesco Ciucci, Adeleke Maradesa'
 
 __date__ = '10th June, 2026'
 
