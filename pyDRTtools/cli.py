@@ -1,0 +1,17 @@
+__authors__ = 'Ching-Hsien Lin modified fromFrancesco Ciucci, Adeleke Maradesa'
+
+__date__ = '10th June, 2026'
+
+
+import click
+from . import GUI
+
+@click.command()
+def main():
+    """Launch the GUI."""
+    GUI.launch_gui()
+
+if __name__ == "__main__":
+    main()
+
+
