@@ -454,9 +454,9 @@ class Figure_Canvas(FigureCanvas):
         
         if entry.method == 'BHT': # for BHT run
             self.axes.plot(entry.mu_Z_re, -entry.mu_Z_im, 
-                           'k', label = '$Z_\\mu$(Regressed)', linewidth=3)
+                            'k', label = 'Zμ (Regressed)', linewidth=3)
             self.axes.plot(entry.mu_Z_H_re_agm, -entry.mu_Z_H_im_agm, 
-                           'b', label = '$Z_H$(Hilbert transform)', linewidth=3)
+                            'b', label = 'Z_H (Hilbert transform)', linewidth=3)
             self.axes.plot(entry.Z_prime, -entry.Z_double_prime, 'or')
             self.axes.legend(frameon = False, fontsize = 15, loc = 'upper left')
             
@@ -467,8 +467,8 @@ class Figure_Canvas(FigureCanvas):
         else: # no computation of the imported data yet
             self.axes.plot(entry.Z_prime, -entry.Z_double_prime, 'or')
         
-        self.axes.set_xlabel('$Z^{\\prime}/\\Omega$')
-        self.axes.set_ylabel('-$Z^{\\prime \\prime}/\\Omega$')
+        self.axes.set_xlabel('Z′ / Ω')
+        self.axes.set_ylabel('-Z″ / Ω')
         self.axes.ticklabel_format(axis="both", style="sci", scilimits=(0,0))
         #self.axes.axis('equal')
         self.axes.set_aspect('equal', adjustable='datalim')
@@ -477,9 +477,9 @@ class Figure_Canvas(FigureCanvas):
         
         if entry.method == 'BHT': # for BHT run
             self.axes.semilogx(entry.freq, absolute(entry.mu_Z_re+1j*entry.mu_Z_im), 
-                               'k', label = '$Z_\\mu$(Regressed)', linewidth=2)
+                               'k', label = 'Zμ (Regressed)', linewidth=2)
             self.axes.semilogx(entry.freq, absolute(entry.mu_Z_H_re_agm+1j*entry.mu_Z_H_im_agm),
-                               'b', label = '$Z_H$(Hilbert transform)', linewidth=2)
+                               'b', label = 'Z_H (Hilbert transform)', linewidth=2)
             self.axes.semilogx(entry.freq, absolute(entry.Z_exp), 'or')
             self.axes.legend(frameon = False, fontsize = 15, loc = 'upper left')
             
@@ -491,16 +491,16 @@ class Figure_Canvas(FigureCanvas):
             self.axes.semilogx(entry.freq, absolute(entry.Z_exp), 'or')
         
         self.axes.set_xlim([min(entry.freq), max(entry.freq)])    
-        self.axes.set_xlabel('$f/Hz$')
-        self.axes.set_ylabel('$|Z|/\\Omega$')
+        self.axes.set_xlabel('f / Hz')
+        self.axes.set_ylabel('|Z| / Ω')
         
     def Phase(self, entry): # plot the phase
         
         if entry.method == 'BHT': # for BHT run
             self.axes.semilogx(entry.freq, angle(entry.mu_Z_re+1j*entry.mu_Z_im, deg = True),
-                               'k', label = '$Z_\\mu$(Regressed)', linewidth=2)
+                               'k', label = 'Zμ (Regressed)', linewidth=2)
             self.axes.semilogx(entry.freq, angle(entry.mu_Z_H_re_agm+1j*entry.mu_Z_H_im_agm, deg = True),
-                               'b', label = '$Z_H$(Hilbert transform)', linewidth=2)
+                               'b', label = 'Z_H (Hilbert transform)', linewidth=2)
             self.axes.semilogx(entry.freq, angle(entry.Z_exp, deg = True), 'or')
             self.axes.legend(frameon = False, fontsize = 15, loc = 'upper left')
         
@@ -512,15 +512,15 @@ class Figure_Canvas(FigureCanvas):
             self.axes.semilogx(entry.freq, angle(entry.Z_exp, deg = True), 'or')
         
         self.axes.set_xlim([min(entry.freq), max(entry.freq)])    
-        self.axes.set_xlabel('$f/Hz$')
-        self.axes.set_ylabel('$angle/^\\circ$')
+        self.axes.set_xlabel('f / Hz')
+        self.axes.set_ylabel('angle / °')
         
     def Re_data(self, entry): # plot the real part
         
         if entry.method == 'BHT': # for BHT run
             self.axes.fill_between(entry.freq, entry.mu_Z_H_re_agm-3*entry.band_re_agm, entry.mu_Z_H_re_agm+3*entry.band_re_agm,  facecolor='lightgrey')
-            self.axes.semilogx(entry.freq, entry.mu_Z_re, 'k', label = '$Z_\\mu$(Regressed)', linewidth=3)
-            self.axes.semilogx(entry.freq, entry.mu_Z_H_re_agm, 'b', label = '$Z_H$(Hilbert transform)', linewidth=3)
+            self.axes.semilogx(entry.freq, entry.mu_Z_re, 'k', label = 'Zμ (Regressed)', linewidth=3)
+            self.axes.semilogx(entry.freq, entry.mu_Z_H_re_agm, 'b', label = 'Z_H (Hilbert transform)', linewidth=3)
             self.axes.semilogx(entry.freq, entry.Z_prime, 'or')
             self.axes.legend(frameon = False, fontsize = 15, loc = 'upper left')
         
@@ -532,15 +532,15 @@ class Figure_Canvas(FigureCanvas):
             self.axes.semilogx(entry.freq, entry.Z_prime, 'or')
         
         self.axes.set_xlim([min(entry.freq), max(entry.freq)])    
-        self.axes.set_xlabel('$f/Hz$')
-        self.axes.set_ylabel('$Z^{\\prime}/\\Omega$')
+        self.axes.set_xlabel('f / Hz')
+        self.axes.set_ylabel('Z′ / Ω')
         
     def Im_data(self, entry): # plot of the imaginary part
         
         if entry.method == 'BHT': # for BHT run
             self.axes.fill_between(entry.freq, -entry.mu_Z_H_im_agm-3*entry.band_im_agm, -entry.mu_Z_H_im_agm+3*entry.band_im_agm,  facecolor='lightgrey')
-            self.axes.semilogx(entry.freq, -entry.mu_Z_im, 'k', label = '$Z_\\mu$(Regressed)', linewidth=3)
-            self.axes.semilogx(entry.freq, -entry.mu_Z_H_im_agm, 'b', label = '$Z_H$(Hilbert transform)', linewidth=3)
+            self.axes.semilogx(entry.freq, -entry.mu_Z_im, 'k', label = 'Zμ (Regressed)', linewidth=3)
+            self.axes.semilogx(entry.freq, -entry.mu_Z_H_im_agm, 'b', label = 'Z_H (Hilbert transform)', linewidth=3)
             self.axes.semilogx(entry.freq, -entry.Z_double_prime, 'or')
             self.axes.legend(frameon = False, fontsize = 15, loc = 'upper left')
             
@@ -552,8 +552,8 @@ class Figure_Canvas(FigureCanvas):
             self.axes.semilogx(entry.freq, -entry.Z_double_prime, 'or')
         
         self.axes.set_xlim([min(entry.freq), max(entry.freq)])    
-        self.axes.set_xlabel('$f/Hz$')
-        self.axes.set_ylabel('-$Z^{\\prime \\prime}/\\Omega$')
+        self.axes.set_xlabel('f / Hz')
+        self.axes.set_ylabel('-Z″ / Ω')
         
     def Re_residual(self, entry): # plot the residuals of the real part of the impedance
         
@@ -563,14 +563,14 @@ class Figure_Canvas(FigureCanvas):
         elif entry.method == 'BHT': # for BHT run
             self.axes.fill_between(entry.freq, -3*entry.band_re_agm, 3*entry.band_re_agm,  facecolor='lightgrey')
             self.axes.semilogx(entry.freq, entry.res_H_re, 'or')
-            self.axes.set_xlabel('$f/Hz$')
-            self.axes.set_ylabel('$R_{\\infty}+Z^{\\prime}_{H}-Z^{\\prime}_{exp}/\\Omega$')
+            self.axes.set_xlabel('f / Hz')
+            self.axes.set_ylabel('R∞ + Z′_H - Z′_exp / Ω')
             y_max = max(3*entry.band_re_agm)
         
         else: # for simple or Bayesian run
             self.axes.semilogx(entry.freq, entry.res_re, 'or')
-            self.axes.set_xlabel('$f/Hz$')
-            self.axes.set_ylabel('$Z^{\\prime}_{DRT}-Z^{\\prime}_{exp}/\\Omega$')
+            self.axes.set_xlabel('f / Hz')
+            self.axes.set_ylabel('Z′_DRT - Z′_exp / Ω')
             y_max = max(absolute(entry.res_re))
         
         self.axes.set_xlim([min(entry.freq), max(entry.freq)])    
@@ -585,14 +585,14 @@ class Figure_Canvas(FigureCanvas):
         elif entry.method == 'BHT': # for BHT run
             self.axes.fill_between(entry.freq, -3*entry.band_im_agm, 3*entry.band_im_agm,  facecolor='lightgrey')
             self.axes.semilogx(entry.freq, entry.res_H_im, 'or')
-            self.axes.set_xlabel('$f/Hz$')
-            self.axes.set_ylabel('$\\omega L_0+Z^{\\prime \\prime}_{H}-Z^{\\prime\\prime}_{exp}/\\Omega$')
+            self.axes.set_xlabel('f / Hz')
+            self.axes.set_ylabel('ωL₀ + Z″_H - Z″_exp / Ω')
             y_max = max(3*entry.band_im_agm)
             
         else: # for simple or Bayesian run
             self.axes.semilogx(entry.freq, entry.res_im, 'or')
-            self.axes.set_xlabel('$f/Hz$')
-            self.axes.set_ylabel('$Z^{\\prime \\prime}_{DRT}-Z^{\\prime \\prime}_{exp}/\\Omega$')
+            self.axes.set_xlabel('f / Hz')
+            self.axes.set_ylabel('Z″_DRT - Z″_exp / Ω')
             y_max = max(absolute(entry.res_im))
             
         self.axes.set_xlim([min(entry.freq), max(entry.freq)])    
@@ -620,8 +620,8 @@ class Figure_Canvas(FigureCanvas):
             y_max = max(entry.upper_bound)
             
         elif entry.method == 'BHT':
-            self.axes.semilogx(entry.out_tau_vec, entry.mu_gamma_fine_re, 'b', linewidth = 3, label = '$Mean Re$')
-            self.axes.semilogx(entry.out_tau_vec, entry.mu_gamma_fine_im, 'k', linewidth = 3, label = '$Mean Im$')
+            self.axes.semilogx(entry.out_tau_vec, entry.mu_gamma_fine_re, 'b', linewidth = 3, label = 'Mean Re')
+            self.axes.semilogx(entry.out_tau_vec, entry.mu_gamma_fine_im, 'k', linewidth = 3, label = 'Mean Im')
             y_min = min(np.concatenate((entry.mu_gamma_fine_re,entry.mu_gamma_fine_im)))
             y_max = max(np.concatenate((entry.mu_gamma_fine_re,entry.mu_gamma_fine_im)))
             
@@ -639,8 +639,8 @@ class Figure_Canvas(FigureCanvas):
             y_min = 0
             y_max = max(entry.gamma)
         
-        self.axes.set_xlabel(r'$\\tau/s$')
-        self.axes.set_ylabel(r'$\\gamma( \\tau)/\\Omega$')
+        self.axes.set_xlabel('τ / s')
+        self.axes.set_ylabel('γ(τ) / Ω')
         self.axes.set_ylim([y_min, 1.1*y_max])
         self.axes.set_xlim([min(entry.out_tau_vec), max(entry.out_tau_vec)])
     
@@ -665,9 +665,9 @@ class Figure_Canvas(FigureCanvas):
             self.axes.set_ylim([0, 125])
             self.axes.set_xlim([-0.5, 5.5])
             self.axes.set_xticks(x) 
-            self.axes.set_xticklabels((r'$s_{1\\sigma}$', r'$s_{2\\sigma}$', r'$s_{3\\sigma}$', r'$s_{\\mu}$', r'$s_{\\rm HD}$', r'$s_{\\rm JSD}$'))
+            self.axes.set_xticklabels(('s_1σ', 's_2σ', 's_3σ', 's_μ', 's_HD', 's_JSD'))
             self.axes.set_yticks([0,50,100]) 
-            self.axes.set_ylabel(r'$\\rm Scores (\\%)$')
+            self.axes.set_ylabel('Scores (%)')
             
 if __name__ == "__main__": # starting the GUI when users run this file 
     

@@ -461,8 +461,8 @@ class Stage2Window(QtWidgets.QDialog):
     def plot_raw_data(self, fitted_y=None):
         self.ax.clear()
         self.ax.plot(self.x_data, self.y_data, 'k.', label='DRT Raw Data', alpha=0.5)
-        self.ax.set_xlabel(r"$\ln(\tau)$") 
-        self.ax.set_ylabel(r"$\gamma(\tau)$")
+        self.ax.set_xlabel("ln(τ)") 
+        self.ax.set_ylabel("γ(τ)")
         if fitted_y is not None:
             self.ax.plot(self.x_data, fitted_y, 'r-', label='Total Fit', linewidth=2)
             params, _ = self.get_params()
