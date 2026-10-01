@@ -1,0 +1,21 @@
+# Build-time dependencies for the Windows release bundle.
+#
+# Python version: 3.10.
+#   Upstream requirements.txt pins scipy==1.10.0, numpy==1.24.1 and
+#   pandas==1.5.3. None of those ship wheels for Python 3.12+, and
+#   INSTALL.md advises 3.10 explicitly ("GUI doesn't open -> use Python
+#   3.10, not 3.12+"). So the packaging environment is pinned to 3.10.
+#
+# click is a runtime dependency even though upstream requirements.txt
+# omits it: pyDRTtools/__init__.py imports pyDRTtools.cli, and cli.py
+# imports click. Without it the app fails at startup.
+#
+# scikit-learn is pinned here because upstream leaves it unpinned and only
+# sklearn.model_selection.KFold is used; a fixed version keeps release
+# builds reproducible.
+
+-r ../requirements.txt
+
+click>=8.1,<9
+scikit-learn==1.3.2
+pyinstaller>=6.11,<7

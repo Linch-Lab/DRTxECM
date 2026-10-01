@@ -161,3 +161,18 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+# ---------------------------------------------------------------------------
+# DRTxECM packaging
+# ---------------------------------------------------------------------------
+# 上面的 `*.spec` 是為了忽略 PyInstaller 自動產生的 spec 檔，但 DRTxECM.spec
+# 是本專案親手維護、必須進版控的建置設定，因此例外開放。
+!DRTxECM.spec
+
+# 由 version.txt 生成的 Windows 版本資源（每次建置重新產生）
+packaging/version_info.txt
+
+# 發行壓縮檔與解壓後的內容不進版控，二進位一律走 GitHub Releases。
+# 只把版本說明（RELEASE.md、SHA256SUMS.txt）留在版控裡。
+releases/*/DRTxECM-win64/
+releases/*/*.zip

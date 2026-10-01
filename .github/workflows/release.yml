@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 版本固定 3.10：上游 requirements.txt 鎖定的 scipy 1.10 / numpy 1.24 /
+      # pandas 1.5 沒有 3.12+ 的 wheel，INSTALL.md 也建議用 3.10。
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Read version
+        id: ver
+        shell: pwsh
+        run: |
+          $v = (Get-Content version.txt -Raw).Trim()
+          if (-not $v) { throw "version.txt is empty" }
+          "version=$v" >> $env:GITHUB_OUTPUT
+          Write-Host "Building DRTxECM v$v"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r packaging/requirements-build.txt
+
+      - name: Generate Windows version resource
+        run: python packaging/make_version_info.py
+
+      - name: Build EXE
+        run: python -m PyInstaller --noconfirm --clean DRTxECM.spec
+
+      - name: Check the bundle was produced
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "dist/DRTxECM/DRTxECM.exe")) {
+            throw "DRTxECM.exe was not built"
+          }
+          $mb = (Get-ChildItem dist/DRTxECM -Recurse -File |
+                 Measure-Object Length -Sum).Sum / 1MB
+          Write-Host ("bundle size: {0:N1} MB" -f $mb)
+
+      # 這是本流程最重要的一道關卡。PyInstaller 常常「建置成功」卻在啟動時
+      # 才因為缺少 Qt 平台外掛或 cvxopt 的 BLAS/LAPACK DLL 而崩潰。這裡用
+      # offscreen 平台外掛實際跑一次，確認它不會立刻退出，避免把壞掉的
+      # 打包檔發佈出去。
+      - name: Smoke test (offscreen launch)
+        shell: pwsh
+        run: |
+          $env:QT_QPA_PLATFORM = "offscreen"
+          $p = Start-Process -FilePath "dist/DRTxECM/DRTxECM.exe" -PassThru
+          Start-Sleep -Seconds 30
+          if ($p.HasExited) {
+            throw "DRTxECM.exe exited early (code $($p.ExitCode)); the bundle is incomplete"
+          }
+          Write-Host "OK: the GUI stayed alive for 30 s"
+          Stop-Process -Id $p.Id -Force
+
+      - name: Zip release
+        shell: pwsh
+        run: >
+          Compress-Archive -Path "dist/DRTxECM/*"
+          -DestinationPath "dist/DRTxECM-win64.zip" -Force
+
+      - name: Generate SHA256
+        shell: pwsh
+        run: |
+          # 必須在壓縮之後執行，且雜湊對象是「zip 檔」本身，這樣才能對應
+          # 網站上 certutil -hashfile DRTxECM-win64.zip SHA256 的驗證方式。
+          Get-FileHash "dist/DRTxECM-win64.zip" -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash)  DRTxECM-win64.zip" } |
+            Out-File -Encoding utf8 "dist/SHA256SUMS.txt"
+          Get-Content "dist/SHA256SUMS.txt"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: DRTxECM v${{ steps.ver.outputs.version }}
+          generate_release_notes: true
+          files: |
+            dist/DRTxECM-win64.zip
+            dist/SHA256SUMS.txt
