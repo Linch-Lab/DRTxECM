@@ -5,7 +5,7 @@
 ```
 releases/
 ├── README.md              本文件
-├── v0.2.0/
+├── v0.2.1/
 │   ├── DRTxECM-win64.zip  免安裝，解壓即用（不進版控，走 GitHub Releases）
 │   ├── SHA256SUMS.txt     檔案雜湊，可驗證下載完整性
 │   └── RELEASE.md         版本說明與更新重點
@@ -48,19 +48,19 @@ packaging/version_info.txt
 | 檔案 | 進版控 |
 |---|---|
 | `releases/README.md` | 是 |
-| `releases/v0.2.0/RELEASE.md` | 是 |
-| `releases/v0.2.0/SHA256SUMS.txt` | 是 |
-| `releases/v0.2.0/DRTxECM-win64.zip` | 否（走 Releases） |
+| `releases/v0.2.1/RELEASE.md` | 是 |
+| `releases/v0.2.1/SHA256SUMS.txt` | 是 |
+| `releases/v0.2.1/DRTxECM-win64.zip` | 否（走 Releases） |
 
 ## 發佈流程
 
 ```bat
-build.bat                          :: 產生 releases\v0.2.0\
-git add releases\v0.2.0\RELEASE.md
-git commit -m "Release v0.2.0"
-git tag v0.2.0
+build.bat                          :: 產生 releases\v0.2.1\
+git add releases\v0.2.1\RELEASE.md
+git commit -m "Release v0.2.1"
+git tag v0.2.1
 git push origin master
-git push origin v0.2.0             :: GitHub Actions 自動建置並發佈 Release
+git push origin v0.2.1             :: GitHub Actions 自動建置並發佈 Release
 ```
 
 推送標籤後，`.github/workflows/release.yml` 會在 GitHub 上自動：

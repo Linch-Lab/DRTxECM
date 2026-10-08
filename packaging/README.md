@@ -155,7 +155,7 @@ CI 因此多了一步「Verify the source edition」，會在壓縮前真的執�
 `version.txt`（倉庫根目錄）是**版本號的唯一來源**，內容就是一行版本號：
 
 ```
-0.2.0
+0.2.1
 ```
 
 `build.bat` 與 GitHub Actions 都讀它；`packaging/make_version_info.py`
@@ -186,8 +186,8 @@ https://github.com/Linch-Lab/DRTxECM/releases/latest/download/DRTxECM-win64.zip
 `releases/latest` 在**還沒有任何 Release 時會回 404**。所以請先：
 
 ```bat
-git tag v0.2.0
-git push origin v0.2.0
+git tag v0.2.1
+git push origin v0.2.1
 ```
 
 等 Actions 跑完、Release 出現、確認下載連結可用之後，再把網站對外公開。
