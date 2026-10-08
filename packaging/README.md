@@ -90,6 +90,66 @@ FIPS 140-2 硬體模組，成本與流程都更高。在那之前，實務上的
 提供清楚的排除說明、一支診斷工具，並在網站上說明「學校電腦可能無法執行未簽章程式」
 這件事——因為那是政策問題，不是程式問題。
 
+## 第二個發行版本：Python 版（packaging/python-edition/）
+
+除了免安裝版，每個 Release 還會附上一個**從原始碼執行**的版本
+`DRTxECM-python.zip`。它不是建置產物，而是把倉庫內容加上三支使用者檔案打包：
+
+| 檔案 | 用途 |
+|---|---|
+| `START-HERE.bat` | 啟動器。找 Python → 建 `.venv` → 裝套件 → 驗證 → 啟動 |
+| `DEBUG.bat` | 同上但保留主控台，用來顯示程式真正的錯誤訊息 |
+| `READ-ME-FIRST.txt` | 中文說明（UTF-8 **with BOM**，記事本不亂碼） |
+
+### 為什麼需要這個版本
+
+`DRTxECM.exe` 沒有程式碼簽章，所以學校或公司的 AppLocker／WDAC／端點防護
+可能直接擋掉它。**`python.exe` 是簽章過的**，因此「用已簽章的直譯器執行
+未簽章的原始碼」這種組合，在許多政策下是可以通過的。
+
+另外它只有約 2.6 MB，而免安裝版是 126 MB（差 47 倍）。
+
+代價是**第一次啟動需要網路**：要從 PyPI 下載約 150 MB 的套件。
+如果學校封鎖 PyPI，這個版本就裝不起來——那種情況請改用免安裝版。
+兩者剛好互補：
+
+| 情況 | 該用哪個版本 |
+|---|---|
+| 一般使用者 | 免安裝版 |
+| 電腦會阻擋未簽章程式 | **Python 版** |
+| 學校封鎖 PyPI | **免安裝版** |
+| 頻寬有限 | **Python 版** |
+
+### 兩個踩過的坑（都已修掉，請勿改回去）
+
+**1. 目錄大小寫必須是 `pyDRTtools`（大寫 T）。**
+`launch.py` 寫的是 `from pyDRTtools.GUI import ...`。Windows 的檔案系統不分大小寫，
+所以 `Copy-Item` 就算路徑打錯成 `pyDRtTools` 也會成功——但**會用錯誤的大小寫
+建立目的目錄**。而 CPython 的 import 路徑快取是**區分大小寫**的，結果就是
+`ModuleNotFoundError: No module named 'pyDRTtools'`。
+CI 因此多了一步「Verify the source edition」，會在壓縮前真的執行
+`python -c "import pyDRTtools"`，這類錯誤就不會再出貨。
+
+**2. `.bat` 必須純 ASCII 且 CRLF。**
+純 ASCII 的理由同 `build.bat`；CRLF 的理由是 cmd.exe 對只有 LF 的批次檔會誤判
+（多行 `if` 區塊與 `for /f` 迴圈）。CI 的驗證步驟與 `tools/check_site.py`
+都會檢查這兩點。
+
+> 也因為「純 ASCII」這條規則，`START-HERE.bat` 裡不能出現中文檔名——
+> 所以使用者說明的檔名是 ASCII 的 `READ-ME-FIRST.txt`（內容仍是中文），
+> 需要解釋時由 .bat 呼叫 `notepad` 開啟它。
+
+### 其他設計取捨
+
+- **用 `.venv` 而不是直接 `pip install`**：不需要系統管理員權限，也不會污染
+  使用者原本的 Python 環境。整個 `.venv` 資料夾可以刪掉重來。
+- **第一次之後就跳過安裝**：靠 `.venv\.installed` 這個標記檔。
+  想強制重裝就執行 `START-HERE.bat repair`。
+- **啟動用 `pythonw.exe`**：不會留下黑色主控台視窗。需要看訊息時改跑
+  `DEBUG.bat`（等同 `START-HERE.bat console`）。
+- **只接受 Python 3.10 與 3.11**：上游鎖定的 scipy 1.10／numpy 1.24／pandas 1.5
+  沒有 3.12+ 的 wheel。版本不對時會給明確訊息，並自動開啟中文說明。
+
 ## 版本號的唯一來源
 
 `version.txt`（倉庫根目錄）是**版本號的唯一來源**，內容就是一行版本號：
