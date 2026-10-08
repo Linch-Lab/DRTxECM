@@ -6,7 +6,7 @@
 
 ### Python 版（新的下載選項）
 
-`DRTxECM-python.zip`，約 2.6 MB（免安裝版是 126 MB）。
+`DRTxECM-python.zip`，約 1.8 MB（免安裝版是 126 MB，小約 69 倍）。
 
 從原始碼執行的版本，內含啟動器 `START-HERE.bat`：自動尋找 Python 3.10／3.11、
 建立專用的 `.venv`、安裝並驗證套件，然後啟動程式。另附 `DEBUG.bat`
@@ -48,7 +48,7 @@
 | 檔案 | 說明 |
 |---|---|
 | `DRTxECM-win64.zip` | 免安裝版，不需 Python，約 126 MB |
-| `DRTxECM-python.zip` | Python 版，需 Python 3.10 或 3.11，約 2.6 MB |
+| `DRTxECM-python.zip` | Python 版，需 Python 3.10 或 3.11，約 1.8 MB |
 | `SHA256SUMS.txt` | 兩個 ZIP 的雜湊值 |
 
 ## 已知限制

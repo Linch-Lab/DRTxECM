@@ -86,7 +86,7 @@ jobs:
           -DestinationPath "dist/DRTxECM-win64.zip" -Force
 
       # Second edition: run from source, for users who already have Python.
-      # It is ~2.6 MB instead of ~126 MB, and because python.exe is signed
+      # It is ~1.8 MB instead of ~126 MB, and because python.exe is signed
       # while our exe is not, it often works on machines whose policy blocks
       # unsigned executables. Contains the launcher, DEBUG.bat and a Chinese
       # read-me; no build products.
