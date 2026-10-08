@@ -67,6 +67,18 @@ jobs:
           Write-Host "OK: the GUI stayed alive for 30 s"
           Stop-Process -Id $p.Id -Force
 
+      # DRTxECM.exe is unsigned, so users on managed (school/company) machines
+      # can hit AppLocker/WDAC or antivirus blocks. These two files ship inside
+      # the ZIP so a blocked user has something to act on and something to
+      # report back. Must run BEFORE the zip step.
+      - name: Bundle the user-facing help files
+        shell: pwsh
+        run: |
+          Copy-Item "packaging/extras/*" "dist/DRTxECM/" -Force
+          Write-Host "files at the top level of the bundle:"
+          Get-ChildItem "dist/DRTxECM" -Force |
+            Select-Object Mode, Name, Length | Format-Table -AutoSize
+
       - name: Zip release
         shell: pwsh
         run: >

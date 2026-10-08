@@ -63,6 +63,18 @@ if not exist "dist\DRTxECM\DRTxECM.exe" (
     exit /b 1
 )
 
+rem Ship the user-facing help files INSIDE the bundle so they are present
+rem after extraction. DRTxECM.exe is unsigned, so users on managed machines
+rem can hit policy or antivirus blocks; without these files a blocked user
+rem has nothing to act on and nothing to report back.
+rem Keep this echo ASCII-only - see the note at the top of this file.
+if exist "packaging\extras" (
+    copy /y "packaging\extras\*" "dist\DRTxECM\" >nul
+    echo       bundled the pre-flight readme and the diagnose script
+) else (
+    echo [WARN] packaging\extras not found - shipping without help files
+)
+
 set "OUTDIR=releases\v%VER%"
 echo.
 echo [4/6] Preparing %OUTDIR% ...
