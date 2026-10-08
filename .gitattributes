@@ -1,0 +1,16 @@
+# Keep Windows scripts byte-exact.
+#
+# git normally stores text blobs with LF and converts on checkout. That is
+# wrong for .bat/.cmd: cmd.exe can misparse an LF-only batch file (multi-line
+# if blocks and for /f loops are the known trouble spots), and
+# raw.githubusercontent.com always serves the blob, so a user who downloads
+# the script straight from GitHub would get the LF version.
+#
+# `-text` disables all end-of-line conversion, so the CRLF bytes are stored
+# as-is and every download path delivers the same file that was tested.
+*.bat  -text
+*.cmd  -text
+
+# Same for the shipped readme: keep the UTF-8 BOM and CRLF exactly as written,
+# because it is opened in Windows Notepad by non-technical users.
+使用前必讀.txt -text
