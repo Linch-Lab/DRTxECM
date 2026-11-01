@@ -36,12 +36,25 @@
 --------------------------------------------------
 ■ 如果電腦裡沒有 Python
 --------------------------------------------------
+有兩種做法，選一種就好：
+
+【做法 A：用 py 直接安裝（最快）】
+在命令提示字元或 PowerShell 輸入：
+
+    py install 3.10
+
+如果你的 py 是「Python Install Manager」（新版 Windows 的預設），
+這一行就會自動下載並安裝好。裝完回到這個資料夾，重新雙擊
+START-HERE.bat 即可。
+
+【做法 B：從官方網站下載安裝檔】
 1. 到 https://www.python.org/downloads/release/python-31011/
 2. 下載「Windows installer (64-bit)」
 3. 安裝時，務必勾選最下方的
    「Add python.exe to PATH」
 4. 安裝完成後，重新雙擊 START-HERE.bat
 
+兩種做法都一樣：不需要重開機，裝完直接再雙擊一次 START-HERE.bat。
 你不需要移除電腦裡原有的 Python 3.12 或 3.13，兩個版本可以並存。
 
 --------------------------------------------------

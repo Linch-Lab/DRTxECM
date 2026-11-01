@@ -108,36 +108,50 @@ if defined SAWVER goto :badver
 goto :nopython
 
 :trypath
-"%~1" -c "import sys" >nul 2>&1
-if errorlevel 1 exit /b
 "%~1" -c "import sys;print(sys.version.split()[0])" >"%TEMP%\drtxecm_pyver.txt" 2>nul
 if errorlevel 1 exit /b
-set /p SAWVER=<"%TEMP%\drtxecm_pyver.txt"
+call :readver
+if not defined TMPVER exit /b
+set "SAWVER=%TMPVER%"
 "%~1" -c "import sys;sys.exit(0 if (3,10)<=sys.version_info[:2]<=(3,11) else 2)" >nul 2>&1
 if errorlevel 1 exit /b
 set PYCMD="%~1"
 exit /b
 
 :tryver
-%1 %2 -c "import sys" >nul 2>&1
-if errorlevel 1 exit /b
 %1 %2 -c "import sys;print(sys.version.split()[0])" >"%TEMP%\drtxecm_pyver.txt" 2>nul
 if errorlevel 1 exit /b
-set /p SAWVER=<"%TEMP%\drtxecm_pyver.txt"
+call :readver
+if not defined TMPVER exit /b
+set "SAWVER=%TMPVER%"
 %1 %2 -c "import sys;sys.exit(0 if (3,10)<=sys.version_info[:2]<=(3,11) else 2)" >nul 2>&1
 if errorlevel 1 exit /b
 set PYCMD=%1 %2
 exit /b
 
 :tryplain
-%1 -c "import sys" >nul 2>&1
-if errorlevel 1 exit /b
 %1 -c "import sys;print(sys.version.split()[0])" >"%TEMP%\drtxecm_pyver.txt" 2>nul
 if errorlevel 1 exit /b
-set /p SAWVER=<"%TEMP%\drtxecm_pyver.txt"
+call :readver
+if not defined TMPVER exit /b
+set "SAWVER=%TMPVER%"
 %1 -c "import sys;sys.exit(0 if (3,10)<=sys.version_info[:2]<=(3,11) else 2)" >nul 2>&1
 if errorlevel 1 exit /b
 set PYCMD=%1
+exit /b
+
+rem Read the version that a probe just wrote. Guards the case a launcher
+rem command returns success WITHOUT producing a version - the Python Install
+rem Manager ("py") does exactly that when the requested runtime is missing:
+rem it prints "[ERROR] No runtime installed that matches 3.10" and still
+rem exits 0. Trusting the exit code alone made this script accept a Python
+rem that was not installed, and then fail at the venv step with a misleading
+rem "could not create the environment" message.
+:readver
+set "TMPVER="
+if not exist "%TEMP%\drtxecm_pyver.txt" exit /b
+set /p TMPVER=<"%TEMP%\drtxecm_pyver.txt"
+del "%TEMP%\drtxecm_pyver.txt" >nul 2>&1
 exit /b
 
 :found
@@ -203,10 +217,20 @@ rem ============================================================
 rem  Problems
 rem ============================================================
 :nopython
-echo [ERROR] Python was not found on this computer.
+echo [ERROR] Python 3.10 or 3.11 was not found on this computer.
 echo.
-echo         DRTxECM needs Python 3.10 or 3.11. Nothing else is required
-echo         and you do NOT need administrator rights.
+echo         DRTxECM needs Python 3.10 or 3.11. Nothing else is required and
+echo         you do NOT need administrator rights.
+echo.
+echo         Two ways to install Python 3.10:
+echo.
+echo           A. run this line:
+echo                  py install 3.10
+echo              It works if your "py" is the Python Install Manager.
+echo.
+echo           B. or download the installer from:
+echo                  https://www.python.org/downloads/release/python-31011/
+echo              and tick "Add python.exe to PATH" during setup.
 echo.
 goto :explain
 
@@ -215,12 +239,20 @@ echo [ERROR] Python %SAWVER% was found, but it cannot be used.
 echo.
 echo         DRTxECM needs Python 3.10 or 3.11.
 echo         The scientific libraries it uses are pinned to versions that
-echo         have no packages for 3.12 and newer, so with 3.12 or 3.13 the
-echo         program would fail to start.
+echo         publish no packages for 3.12 and newer, so on %SAWVER% the
+echo         install would fall back to compiling them from source and fail.
 echo.
-echo         Install Python 3.10 from python.org, tick "Add python.exe to
-echo         PATH" during setup, then run this file again.
-echo         You do NOT need to uninstall %SAWVER%.
+echo         Two ways to add Python 3.10:
+echo.
+echo           A. run this line:
+echo                  py install 3.10
+echo              It works if your "py" is the Python Install Manager.
+echo.
+echo           B. or download the installer from:
+echo                  https://www.python.org/downloads/release/python-31011/
+echo              and tick "Add python.exe to PATH" during setup.
+echo.
+echo         You do NOT need to uninstall %SAWVER% - both can coexist.
 echo.
 goto :explain
 
@@ -235,7 +267,18 @@ exit /b 1
 :venvfail
 echo [ERROR] Could not create the Python environment .venv
 echo.
-echo         Usual causes:
+echo         The interpreter this script tried to use was:
+echo             %PYCMD%
+echo         and it reported version: %SAWVER%
+echo.
+echo         Re-running it now so the real error is visible:
+%PYCMD% -c "import sys;print('            python ' + sys.version.split()[0])" 2>&1
+echo.
+echo         If the line above is an error instead of a Python version, that
+echo         interpreter is not actually installed. Install Python 3.10:
+echo                  py install 3.10
+echo.
+echo         If it did print a version, the usual causes are:
 echo           - not enough free disk space, about 1 GB is needed
 echo           - the folder is inside OneDrive or another synced folder
 echo           - antivirus software blocked the files being written
