@@ -26,15 +26,25 @@ newer Python installed you do **not** need to remove it — 3.10 can sit beside 
    https://www.python.org/downloads/release/python-31011/
    and tick **"Add python.exe to PATH"** during setup.
 2. Open **Command Prompt** (Win+R → `cmd`).
-3. Run:
+3. Run — note **`py -3.10`**, not `python` (see the warning below):
 
 ```bat
 git clone https://github.com/Linch-Lab/DRTxECM.git
 cd DRTxECM
-python -m venv .venv
+py -3.10 -m venv .venv
 .venv\Scripts\python -m pip install -r requirements.txt
 .venv\Scripts\python launch.py
 ```
+
+> **Use `py -3.10`, never plain `python`.**
+> If several Pythons are installed — or you installed a brand-new release such as
+> 3.13, 3.14 or 3.15 — `python` may well be the newest one, not 3.10. A venv
+> created by the wrong interpreter produces a confusing failure later:
+> `scipy==1.10.0` has no wheel for it, `numpy==1.24.1` gets downloaded as a
+> `.tar.gz` and pip tries to compile it from source, and that ends in
+> `BackendUnavailable: Cannot import 'setuptools.build_meta'`.
+> The wheel filenames give it away: `cp315`, `cp313`, `cp312` mean "built for
+> Python 3.15/3.13/3.12", which is the wrong interpreter for this project.
 
 A virtual environment (`.venv`) is recommended: it needs no administrator
 rights and does not touch your other Python installations.
@@ -42,8 +52,8 @@ rights and does not touch your other Python installations.
 If you prefer to install into your own environment, the equivalent is:
 
 ```bat
-pip install -r requirements.txt
-python launch.py
+py -3.10 -m pip install -r requirements.txt
+py -3.10 launch.py
 ```
 
 > `requirements.txt` includes **click**, which is easy to overlook but required:

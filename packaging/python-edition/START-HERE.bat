@@ -61,7 +61,31 @@ if /i "%ACTION%"=="repair" (
 )
 
 rem ---- already installed: start immediately ----
-if exist "%DONE%" if exist "%VPYW%" goto :run
+if not exist "%DONE%" goto :setup
+if not exist "%VPYW%" goto :setup
+rem The .venv may have been created by hand with a different Python - someone
+rem following the manual instructions, or the system `python` resolving to a
+rem brand-new release such as 3.13 or 3.15. Such a venv cannot install the
+rem pinned libraries, so check the interpreter before trusting it.
+"%VPY%" -c "import sys;sys.exit(0 if (3,10)<=sys.version_info[:2]<=(3,11) else 1)" >nul 2>&1
+if errorlevel 1 goto :badvenv
+goto :run
+
+:badvenv
+echo The existing .venv was created by an unsupported Python version.
+echo Rebuilding it with a supported one.
+echo.
+rmdir /s /q "%VENV%"
+echo.
+
+:setup
+rem A .venv without our marker means a previous attempt did not finish, or it
+rem was made by hand. Start from a clean environment either way.
+if exist "%VENV%" (
+    echo Removing an incomplete .venv from a previous attempt ...
+    rmdir /s /q "%VENV%"
+    echo.
+)
 
 rem ============================================================
 rem  Find a usable Python
